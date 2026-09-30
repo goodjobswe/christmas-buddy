@@ -8,7 +8,9 @@ class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   static final website = Uri.parse('https://goodjob.nu');
-  static final source = Uri.parse('https://github.com/goodjobswe/christmas-buddy');
+  static final source = Uri.parse(
+    'https://github.com/goodjobswe/christmas-buddy',
+  );
 
   Future<void> _open(BuildContext context, Uri uri) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -19,7 +21,11 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final body = TextStyle(fontSize: 15, height: 1.45, color: Colors.grey.shade900);
+    final body = TextStyle(
+      fontSize: 15,
+      height: 1.45,
+      color: Colors.grey.shade900,
+    );
     return Scaffold(
       appBar: AppBar(title: const Text('About')),
       body: ListView(
@@ -30,15 +36,20 @@ class AboutScreen extends StatelessWidget {
           const Text(
             'Christmas Buddy',
             textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Rochester', fontSize: 42, color: ElfColors.red),
+            style: TextStyle(
+              fontFamily: 'Rochester',
+              fontSize: 42,
+              color: ElfColors.red,
+            ),
           ),
           FutureBuilder<PackageInfo>(
             future: PackageInfo.fromPlatform(),
-            builder: (context, snapshot) => Text(
-              snapshot.hasData ? 'Version ${snapshot.data!.version}' : '',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-            ),
+            builder:
+                (context, snapshot) => Text(
+                  snapshot.hasData ? 'Version ${snapshot.data!.version}' : '',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                ),
           ),
           const SizedBox(height: 20),
           Text(
@@ -49,11 +60,35 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const _Heading('How to play'),
-          _Bullet('Find Pip. He hides somewhere new every day, all year round. Tap around and watch for warmer and colder.', body),
-          _Bullet('In December each find counts on the advent calendar. On the 24th he waits by the star.', body),
-          _Bullet('Keep Santa\'s nice and naughty lists up to date, and tick off the presents as they are sorted.', body),
-          _Bullet('Choose a season in Settings, or let the village follow the year automatically.', body),
-          _Bullet('In winter, blow the snow sideways with a finger, and turn on a daily reminder so you never lose count.', body),
+          _Bullet(
+            'Find Pip. He hides somewhere new every day, all year round. Tap around and watch for warmer and colder.',
+            body,
+          ),
+          _Bullet(
+            'In December each find counts on the advent calendar. On the 24th he waits by the star.',
+            body,
+          ),
+          _Bullet(
+            'Keep Santa\'s nice and naughty lists up to date, and tick off the presents as they are sorted.',
+            body,
+          ),
+          _Bullet(
+            'Choose a season in Settings, or let the village follow the year automatically.',
+            body,
+          ),
+          _Bullet(
+            'In winter, blow the snow sideways with a finger, and turn on a daily reminder so you never lose count.',
+            body,
+          ),
+          const SizedBox(height: 16),
+          const _Heading('Privacy'),
+          Text(
+            'Your lists, settings and Pip discoveries are saved on your device. '
+            'There are no accounts, ads, analytics or tracking. Android may include '
+            'this data in device backups, depending on your system settings. '
+            'Sharing and website links only open when you choose them.',
+            style: body,
+          ),
           const SizedBox(height: 16),
           const _Heading('Credits'),
           Text('Made by goodjob.', style: body),
@@ -71,6 +106,14 @@ class AboutScreen extends StatelessWidget {
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: [
+              TextButton(
+                onPressed:
+                    () => showLicensePage(
+                      context: context,
+                      applicationName: 'Christmas Buddy',
+                    ),
+                child: const Text('Open-source licences'),
+              ),
               TextButton(
                 onPressed: () => _open(context, website),
                 child: const Text('goodjob.nu'),
@@ -99,7 +142,11 @@ class _Heading extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: const TextStyle(fontFamily: 'Rochester', fontSize: 28, color: ElfColors.red),
+        style: const TextStyle(
+          fontFamily: 'Rochester',
+          fontSize: 28,
+          color: ElfColors.red,
+        ),
       ),
     );
   }

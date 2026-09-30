@@ -58,6 +58,14 @@ Captured on an Android 15 emulator with the app's date set to 20 December. Gift 
 - **Santa's list:** keep nice and naughty lists, add gift ideas, and tick off presents as they are ready.
 - **Reminders and sharing:** choose a daily December reminder or share a picture of your countdown.
 
+## Install
+
+Download **christmas-buddy-2.0.0-android.apk** from the [latest release](https://github.com/goodjobswe/christmas-buddy/releases/latest) on your Android phone, open it, and allow installation from that browser or file manager when Android asks. Requires Android 5.0 or newer. The APK includes ARM and x86-64 support.
+
+This release uses a dedicated signing key. A development build or the old Google Play edition may need to be removed first if Android reports a signature conflict. Removing the app deletes its local lists and progress. Future GitHub releases will use the same key so they can update in place.
+
+See [privacy](PRIVACY.md) and [what changed](CHANGELOG.md).
+
 ## Run on Android
 
 Install Flutter, the Android SDK and a compatible Java JDK. Start an Android emulator or connect a phone with USB debugging enabled. The current development baseline is Flutter 3.29.3 / Dart 3.7.2.
@@ -70,13 +78,13 @@ flutter run -d ANDROID_DEVICE_ID
 
 Replace `ANDROID_DEVICE_ID` with the device ID shown by `flutter devices`.
 
-The app is not currently available in an app store. To build an APK for local installation:
+For a signed release build, configure your own signing key as described in [Releasing](docs/RELEASING.md), then run:
 
 ```sh
 flutter build apk --release
 ```
 
-The APK is written to `build/app/outputs/flutter-apk/app-release.apk`. Release builds currently use the development signing key.
+The APK is written to `build/app/outputs/flutter-apk/app-release.apk`. Release builds require a signing key; debug builds work without one.
 
 ## Development
 
@@ -108,7 +116,7 @@ The main app code is in `lib/src/`, grouped by screen and feature. Tests and ren
 ## Credits and licence
 
 - Code and artwork: [MIT](LICENSE).
-- Fonts: Open Sans and Rochester, from Google Fonts under their open licences.
+- Fonts: Open Sans ([SIL Open Font License](assets/licenses/OpenSans-OFL.txt)) and Rochester ([Apache 2.0](assets/licenses/Rochester-Apache-2.0.txt)). Full notices are available in **About ? Open-source licences**.
 - Music: traditional public-domain carols, with arrangements and recordings covered by the project's MIT licence.
 
 Christmas Buddy first appeared on Google Play in 2022. The 2026 version brings a new village, Pip the elf and an open-source home for the project.

@@ -1,0 +1,5 @@
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=release
+# Relative to android/app, or use an absolute path with forward slashes.
+storeFile=christmas-buddy-release.jks

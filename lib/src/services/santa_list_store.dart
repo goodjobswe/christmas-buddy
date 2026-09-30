@@ -23,10 +23,19 @@ class SantaListStore extends ChangeNotifier {
     final raw = prefs.getString(_key);
     if (raw == null || raw.isEmpty) return [];
     try {
-      final list = jsonDecode(raw) as List<dynamic>;
-      return list
-          .map((e) => SantaListEntry.fromJson(e as Map<String, Object?>))
-          .toList();
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      final entries = <SantaListEntry>[];
+      for (final value in decoded) {
+        if (value is! Map<String, dynamic>) continue;
+        try {
+          entries.add(SantaListEntry.fromJson(value));
+        } on TypeError {
+          // A damaged row must not stop startup or hide the remaining gifts.
+          continue;
+        }
+      }
+      return entries;
     } on FormatException {
       return [];
     }
@@ -57,8 +66,12 @@ class SantaListStore extends ChangeNotifier {
     return entry;
   }
 
-  Future<void> update(SantaListEntry entry,
-      {String? name, String? note, bool? done}) async {
+  Future<void> update(
+    SantaListEntry entry, {
+    String? name,
+    String? note,
+    bool? done,
+  }) async {
     if (name != null) entry.name = name.trim();
     if (note != null) entry.note = note.trim();
     if (done != null) entry.done = done;

@@ -1,6 +1,6 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import 'package:christmas_buddy/src/app_scope.dart';
 import 'package:christmas_buddy/src/audio/audio_controller.dart';
@@ -16,15 +16,30 @@ import 'package:christmas_buddy/src/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(() async* {
+    for (final entry
+        in {
+          'Christmas Buddy': 'christmas-buddy-MIT.txt',
+          'Open Sans': 'OpenSans-OFL.txt',
+          'Rochester': 'Rochester-Apache-2.0.txt',
+        }.entries) {
+      final text = await rootBundle.loadString(
+        'assets/licenses/${entry.value}',
+      );
+      yield LicenseEntryWithLineBreaks([entry.key], text);
+    }
+  });
   final country = PlatformDispatcher.instance.locale.countryCode;
   final settings = await AppSettings.load(countryCode: country);
   final lists = await SantaListStore.load();
-  runApp(ChristmasBuddyApp(
-    settings: settings,
-    lists: lists,
-    audio: AudioController(),
-    reminders: ReminderScheduler(),
-  ));
+  runApp(
+    ChristmasBuddyApp(
+      settings: settings,
+      lists: lists,
+      audio: AudioController(),
+      reminders: ReminderScheduler(),
+    ),
+  );
 }
 
 class ChristmasBuddyApp extends StatefulWidget {
