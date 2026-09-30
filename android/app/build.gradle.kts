@@ -1,23 +1,9 @@
-import java.io.FileInputStream
-import java.util.Properties
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
-
-// The release signing key lives outside the repository. When key.properties
-// is absent, release builds fall back to the debug key so `flutter run
-// --release` still works; such a build must not be distributed.
-val keystorePropertiesFile = rootProject.file("key.properties")
-val keystoreProperties = Properties().apply {
-    if (keystorePropertiesFile.exists()) {
-        FileInputStream(keystorePropertiesFile).use { load(it) }
-    }
-}
-val hasReleaseKey = keystorePropertiesFile.exists()
 
 android {
     namespace = "nu.goodjob.christmas_buddy"
@@ -45,20 +31,11 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        if (hasReleaseKey) {
-            create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
-            }
-        }
-    }
-
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName(if (hasReleaseKey) "release" else "debug")
+            // This app is not distributed through a store, so release builds
+            // are signed with the debug key and `flutter run --release` just works.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
