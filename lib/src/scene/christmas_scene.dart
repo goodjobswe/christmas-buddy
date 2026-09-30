@@ -6,6 +6,7 @@ import 'package:christmas_buddy/src/scene/scene_events.dart';
 import 'package:christmas_buddy/src/scene/scene_fx_painter.dart';
 import 'package:christmas_buddy/src/scene/scene_layout.dart';
 import 'package:christmas_buddy/src/scene/scene_painter.dart';
+import 'package:christmas_buddy/src/scene/season.dart';
 import 'package:christmas_buddy/src/scene/tree_decorations.dart';
 import 'package:christmas_buddy/src/snow/snowflakes.dart';
 
@@ -21,12 +22,14 @@ class ChristmasScene extends StatefulWidget {
     required this.flakeCount,
     this.events = const SceneEvents(aurora: false, reindeerStation: null, sleigh: false),
     this.animate = true,
+    this.season = Season.winter,
     this.onElfTap,
     this.onMissTap,
   });
 
   /// December day 1 to 24 for the decorations, 0 outside December.
   final int day;
+  final Season season;
   final int elfSpotIndex;
   final bool showElf;
   final int flakeCount;
@@ -144,6 +147,7 @@ class ChristmasSceneState extends State<ChristmasScene> with TickerProviderState
                       layout: layout,
                       decorations: decorations,
                       events: widget.events,
+                      season: widget.season,
                       elfSpot: spot,
                       elfReacting: _elfAnim.isAnimating,
                       elfT: _elfAnim.value,
@@ -159,6 +163,7 @@ class ChristmasSceneState extends State<ChristmasScene> with TickerProviderState
                       layout: layout,
                       decorations: decorations,
                       events: widget.events,
+                      season: widget.season,
                       time: _time,
                       puffs: _puffs,
                       hintStart: _hintStart,
@@ -167,9 +172,10 @@ class ChristmasSceneState extends State<ChristmasScene> with TickerProviderState
                   ),
                 ),
               ),
-              RepaintBoundary(
-                child: SnowLayer(flakeCount: widget.animate ? widget.flakeCount : 0),
-              ),
+              if (widget.season == Season.winter)
+                RepaintBoundary(
+                  child: SnowLayer(flakeCount: widget.animate ? widget.flakeCount : 0),
+                ),
             ],
           ),
         );

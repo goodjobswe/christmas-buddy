@@ -1,4 +1,6 @@
 import 'dart:math' as math;
+import 'package:christmas_buddy/src/scene/season.dart';
+import 'package:christmas_buddy/src/scene/season_scenery.dart';
 
 import 'package:flutter/material.dart';
 
@@ -59,12 +61,17 @@ class ScenePainter extends CustomPainter {
     required this.layout,
     required this.decorations,
     required this.events,
+    this.season = Season.winter,
     this.elfSpot,
     this.elfReacting = false,
     this.elfT = 0,
   });
 
   final SceneLayout layout;
+  final Season season;
+  bool get _winter => season == Season.winter;
+  Color get _snowCover => _winter ? SceneColors.snowBright : Colors.transparent;
+  SeasonScenery get _scenery => SeasonScenery(layout, season);
   final TreeDecorations decorations;
   final SceneEvents events;
   final ElfSpot? elfSpot;
@@ -148,10 +155,10 @@ class ScenePainter extends CustomPainter {
     c.drawRect(
       rect,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [SceneColors.skyTop, SceneColors.skyMid, SceneColors.skyHorizon],
+          colors: season.sky,
           stops: [0, 0.45, 0.68],
         ).createShader(rect),
     );
@@ -182,8 +189,8 @@ class ScenePainter extends CustomPainter {
   // Mountains ------------------------------------------------------------
 
   void _paintMountains(Canvas c) {
-    _paintRange(c, layout.farRidge, layout.h * 0.64, SceneColors.farMountain, SceneColors.farCrest);
-    _paintRange(c, layout.nearRidge, layout.h * 0.66, SceneColors.nearMountain, SceneColors.nearCrest);
+    _paintRange(c, layout.farRidge, layout.h * 0.64, season.farMountain, _winter ? SceneColors.farCrest : season.farMountain);
+    _paintRange(c, layout.nearRidge, layout.h * 0.66, season.nearMountain, _winter ? SceneColors.nearCrest : season.nearMountain);
     for (final pine in layout.slopePines) {
       _paintPine(c, pine, color: SceneColors.slopePine, snow: false, trunk: false);
     }
@@ -227,9 +234,9 @@ class ScenePainter extends CustomPainter {
     final l = layout;
     final w = l.w;
     final h = l.h;
-    c.drawPath(l.ground, Paint()..color = SceneColors.snow);
+    c.drawPath(l.ground, Paint()..color = season.ground);
 
-    final shade = Paint()..color = SceneColors.snowShade.withValues(alpha: 0.75);
+    final shade = Paint()..color = season.groundShade.withValues(alpha: 0.75);
     c.drawPath(
       Path()
         ..moveTo(-1, h * 0.705)
@@ -261,10 +268,12 @@ class ScenePainter extends CustomPainter {
     c.drawPath(
       edge,
       Paint()
-        ..color = SceneColors.snowBright
+        ..color = _snowCover
         ..style = PaintingStyle.stroke
         ..strokeWidth = u * 0.008,
     );
+
+    _scenery.ground(c);
 
     for (final pine in l.hillPines) {
       _paintPine(c, pine, trunk: false);
@@ -287,7 +296,11 @@ class ScenePainter extends CustomPainter {
     _paintPostbox(c, layout.postbox);
     _paintWoodpile(c, layout.woodpile);
     for (var i = 0; i < layout.giftStack.length; i++) {
-      _paintGift(c, layout.giftStack[i], i + 1);
+      if (_winter || decorations.day > 0) {
+        _paintGift(c, layout.giftStack[i], i + 1);
+      } else {
+        _scenery.planter(c, layout.giftStack[i]);
+      }
     }
     for (final bird in layout.birds) {
       _paintBird(c, bird);
@@ -350,7 +363,7 @@ class ScenePainter extends CustomPainter {
       ..lineTo(hs.roofPeak.dx, hs.roofPeak.dy + roofH * 0.04)
       ..lineTo(walls.right + o * 0.4, walls.top - roofH * 0.22)
       ..close();
-    c.drawPath(snowRoof, Paint()..color = SceneColors.snowBright);
+    c.drawPath(snowRoof, Paint()..color = _snowCover);
 
     final ch = hs.chimney;
     c.drawRect(ch, Paint()..color = SceneColors.chimney);
@@ -360,7 +373,7 @@ class ScenePainter extends CustomPainter {
         Rect.fromLTWH(ch.left - ch.width * 0.12, ch.top - cap * 0.5, ch.width * 1.24, cap),
         Radius.circular(cap * 0.4),
       ),
-      Paint()..color = SceneColors.snowBright,
+      Paint()..color = _snowCover,
     );
   }
 
@@ -412,7 +425,7 @@ class ScenePainter extends CustomPainter {
         ..lineTo(body.center.dx, body.top - roofH * 0.95)
         ..lineTo(body.right + o * 0.3, body.top - roofH * 0.2)
         ..close(),
-      Paint()..color = SceneColors.snowBright,
+      Paint()..color = _snowCover,
     );
     for (final win in church.windows) {
       _paintWindow(c, win, arched: true);
@@ -444,7 +457,7 @@ class ScenePainter extends CustomPainter {
       Offset(tower.left - u * 0.004, tower.top),
       church.spireTip,
       Paint()
-        ..color = SceneColors.snowBright
+        ..color = _snowCover
         ..strokeWidth = u * 0.006
         ..strokeCap = StrokeCap.round,
     );
@@ -475,7 +488,7 @@ class ScenePainter extends CustomPainter {
         Rect.fromLTWH(box.left - box.width * 0.08, box.top - box.height * 0.12, box.width * 1.16, box.height * 0.22),
         Radius.circular(box.width * 0.1),
       ),
-      Paint()..color = SceneColors.snowBright,
+      Paint()..color = _snowCover,
     );
   }
 
@@ -499,7 +512,7 @@ class ScenePainter extends CustomPainter {
         Rect.fromCenter(center: Offset(pile.center.dx, pile.top + r * 0.2), width: r * 4.4, height: r * 0.9),
         Radius.circular(r * 0.4),
       ),
-      Paint()..color = SceneColors.snowBright,
+      Paint()..color = _snowCover,
     );
   }
 
@@ -541,7 +554,7 @@ class ScenePainter extends CustomPainter {
     );
 
     final snowPaint = Paint()
-      ..color = SceneColors.snowBright
+      ..color = _snowCover
       ..style = PaintingStyle.stroke
       ..strokeWidth = u * 0.012
       ..strokeCap = StrokeCap.round
@@ -673,13 +686,21 @@ class ScenePainter extends CustomPainter {
     }
     _paintBench(c, l.bench);
     _paintPine(c, l.leftPine);
-    _paintSled(c, l.sled);
+    if (_winter) {
+      _paintSled(c, l.sled);
+    } else {
+      _scenery.planter(c, l.sled);
+    }
     _paintLamp(c, l.lamp);
     if (station != null && station == 0) {
       _paintReindeer(c, l.reindeerStations[0]);
     }
     _paintFence(c, l.fence);
-    _paintSnowman(c, l.snowman);
+    if (_winter) {
+      _paintSnowman(c, l.snowman);
+    } else {
+      _scenery.garden(c, l.snowman);
+    }
     _paintDrift(c, l.drift);
     for (final v in l.villagers) {
       _paintVillager(c, v);
@@ -718,7 +739,7 @@ class ScenePainter extends CustomPainter {
           ..close(),
         Paint()..color = color,
       );
-      if (snow) {
+      if (snow && _winter) {
         c.drawLine(left, Offset.lerp(left, apex, 0.25)!, snowPaint);
         c.drawLine(right, Offset.lerp(right, apex, 0.25)!, snowPaint);
       }
@@ -769,7 +790,7 @@ class ScenePainter extends CustomPainter {
         Rect.fromLTWH(seat.left - u * 0.002, seat.top - seat.height * 0.5, seat.width + u * 0.004, seat.height * 0.7),
         Radius.circular(seat.height * 0.3),
       ),
-      Paint()..color = SceneColors.snowBright,
+      Paint()..color = _snowCover,
     );
   }
 
@@ -823,7 +844,7 @@ class ScenePainter extends CustomPainter {
         ..close(),
       post,
     );
-    c.drawCircle(Offset(head.center.dx, head.top - lamp.headHeight * 0.3), u * 0.006, Paint()..color = SceneColors.snowBright);
+    c.drawCircle(Offset(head.center.dx, head.top - lamp.headHeight * 0.3), u * 0.006, Paint()..color = _snowCover);
     c.drawRect(
       Rect.fromCenter(center: Offset(head.center.dx, head.bottom), width: hw * 0.6, height: lamp.headHeight * 0.12),
       post,
@@ -836,7 +857,7 @@ class ScenePainter extends CustomPainter {
     final railH = r.height * 0.14;
     c.drawRect(Rect.fromLTWH(r.left, r.top + r.height * 0.28, r.width, railH), wood);
     c.drawRect(Rect.fromLTWH(r.left, r.top + r.height * 0.64, r.width, railH), wood);
-    final snowDab = Paint()..color = SceneColors.snowBright;
+    final snowDab = Paint()..color = _snowCover;
     final gaps = math.max(1, (r.width / fence.postSpacing).round());
     for (var i = 0; i <= gaps; i++) {
       final x = r.left + r.width * i / gaps;
@@ -864,7 +885,7 @@ class ScenePainter extends CustomPainter {
       ),
       Paint()..color = SceneColors.shadow,
     );
-    final white = Paint()..color = SceneColors.snowBright;
+    final white = Paint()..color = _snowCover;
     final shade = Paint()..color = SceneColors.snowShade;
     void ball(Offset center, double r) {
       c.drawCircle(center, r, shade);
@@ -926,8 +947,9 @@ class ScenePainter extends CustomPainter {
   }
 
   void _paintDrift(Canvas c, Rect drift) {
-    c.drawOval(drift.shift(Offset(u * 0.01, u * 0.006)), Paint()..color = SceneColors.snowShade);
-    c.drawOval(drift, Paint()..color = SceneColors.snowBright);
+    c.drawOval(drift.shift(Offset(u * 0.01, u * 0.006)), Paint()..color = season.groundShade);
+    c.drawOval(drift, Paint()..color = season.groundHighlight);
+    if (!_winter) _scenery.drift(c, drift);
   }
 
   void _paintSignpost(Canvas c, Signpost sign) {
@@ -974,7 +996,7 @@ class ScenePainter extends CustomPainter {
         Rect.fromLTWH(base.dx + poleW * 0.4 - boardW * 0.9, boardTop - u * 0.005, boardW * 0.85, u * 0.008),
         Radius.circular(u * 0.003),
       ),
-      Paint()..color = SceneColors.snowBright,
+      Paint()..color = _snowCover,
     );
   }
 
@@ -1133,6 +1155,7 @@ class ScenePainter extends CustomPainter {
   @override
   bool shouldRepaint(ScenePainter old) =>
       old.layout != layout ||
+      old.season != season ||
       old.decorations != decorations ||
       old.events != events ||
       old.elfSpot != elfSpot ||

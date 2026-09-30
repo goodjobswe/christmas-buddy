@@ -15,6 +15,7 @@ import 'package:christmas_buddy/src/elf/found_dialog.dart';
 import 'package:christmas_buddy/src/scene/christmas_scene.dart';
 import 'package:christmas_buddy/src/scene/elf_spots.dart';
 import 'package:christmas_buddy/src/scene/scene_events.dart';
+import 'package:christmas_buddy/src/scene/season.dart';
 import 'package:christmas_buddy/src/settings/app_settings.dart';
 import 'package:christmas_buddy/src/share/share_scene.dart';
 import 'package:christmas_buddy/src/snow/snowflakes.dart';
@@ -44,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _initialised = false;
   String _dateKey = '';
   String _line = '';
+  Season? _lineSeason;
   String? _toast;
   bool _hintReady = false;
   double? _lastMissDistance;
@@ -92,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _lastSleeps = sleeps;
     setState(() {
       _dateKey = ChristmasCountdown.dateKey(now);
-      _line = ElfLines.pick(_random, sleeps: sleeps, isChristmas: countdown.isChristmas(now));
+      _line = ElfLines.pick(_random, sleeps: sleeps, isChristmas: countdown.isChristmas(now), season: _settings.seasonFor(now));
       _lastMissDistance = null;
     });
   }
@@ -101,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = appNow();
     final countdown = _countdown;
     setState(() {
-      _line = ElfLines.pick(_random, sleeps: countdown.sleeps(now), isChristmas: countdown.isChristmas(now));
+      _line = ElfLines.pick(_random, sleeps: countdown.sleeps(now), isChristmas: countdown.isChristmas(now), season: _settings.seasonFor(now));
     });
   }
 
@@ -142,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       line: ElfLines.foundLineFor(spot.reaction, _random),
       detail: detail,
-      notice: SceneEvents.notice(now),
+      notice: SceneEvents.notice(now, season: settings.seasonFor(now)),
     );
   }
 
@@ -193,6 +195,12 @@ class _HomeScreenState extends State<HomeScreen> {
         final now = appNow();
         final countdown = ChristmasCountdown(christmasDay: settings.christmasDay);
         final day = ChristmasCountdown.decorationDay(now);
+        final season = settings.seasonFor(now);
+        if (_lineSeason != season) {
+          _lineSeason = season;
+          _line = ElfLines.pick(_random, sleeps: countdown.sleeps(now),
+              isChristmas: countdown.isChristmas(now), season: season);
+        }
         final foundToday = settings.isFoundOn(_dateKey);
         final flakes = snowFlakeCount(
           intensityIndex: settings.snowIntensity.index,
@@ -209,8 +217,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ChristmasScene(
                   key: _sceneKey,
                   day: day,
+                  season: season,
                   elfSpotIndex: ElfSchedule.spotFor(now),
-                  events: SceneEvents.forDate(now),
+                  events: SceneEvents.forDate(now, season: season),
                   showElf: true,
                   flakeCount: flakes,
                   onElfTap: _onElfTap,

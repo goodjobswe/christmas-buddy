@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:christmas_buddy/src/app_scope.dart';
+import 'package:christmas_buddy/src/clock.dart';
+import 'package:christmas_buddy/src/scene/season.dart';
 import 'package:christmas_buddy/src/settings/app_settings.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -32,17 +34,43 @@ class SettingsScreen extends StatelessWidget {
                 'Christmas Eve for Sweden and much of Europe, Christmas Day for most of '
                 'the English speaking world. The countdown ends at midnight.',
               ),
-              const _SectionTitle('Snow'),
+              const _SectionTitle('Village season'),
+              DropdownButtonFormField<String>(
+                value: settings.season?.name ?? 'automatic',
+                decoration: const InputDecoration(
+                  labelText: 'Season',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem(value: 'automatic', child: Text('Automatic')),
+                  for (final season in Season.values)
+                    DropdownMenuItem(value: season.name, child: Text(season.label)),
+                ],
+                onChanged: (value) => settings.setSeason(
+                  value == 'automatic' || value == null
+                      ? null : Season.values.byName(value),
+                ),
+              ),
+              _Hint(settings.season == null
+                  ? 'Following the village calendar: ${settings.seasonFor(appNow()).label.toLowerCase()}. '
+                    'Spring starts in March, summer in June, autumn in September and winter in December.'
+                  : 'Enjoy ${settings.season!.label.toLowerCase()} whenever you like. '
+                    'Choose Automatic to follow the time of year.'),
+              const _Hint('Pip hides every day, in every season. Christmas decorations still follow December.'),
+              const _SectionTitle('Winter snow'),
               Slider(
                 value: settings.snowIntensity.index.toDouble(),
                 min: 0,
                 max: (SnowIntensity.values.length - 1).toDouble(),
                 divisions: SnowIntensity.values.length - 1,
                 label: settings.snowIntensity.label,
-                onChanged: (value) => settings.setSnowIntensity(SnowIntensity.values[value.round()]),
+                onChanged: settings.seasonFor(appNow()) == Season.winter
+                    ? (value) => settings.setSnowIntensity(SnowIntensity.values[value.round()])
+                    : null,
               ),
-              _Hint('${settings.snowIntensity.label}. It snows a little harder as December goes on, '
-                  'and you can blow the snow sideways with a finger.'),
+              _Hint(settings.seasonFor(appNow()) == Season.winter
+                  ? '${settings.snowIntensity.label}. Swipe to stir the snow. Snowfall grows through December.'
+                  : 'Snow appears in winter. Your ${settings.snowIntensity.label.toLowerCase()} snow setting is saved for then.'),
               const _SectionTitle('Sound'),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,

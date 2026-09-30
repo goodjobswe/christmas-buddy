@@ -3,6 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:christmas_buddy/main.dart';
+import 'package:christmas_buddy/src/scene/christmas_scene.dart';
+import 'package:christmas_buddy/src/scene/scene_painter.dart';
+import 'package:christmas_buddy/src/scene/season.dart';
+import 'package:christmas_buddy/src/snow/snowflakes.dart';
 import 'package:christmas_buddy/src/audio/audio_controller.dart';
 import 'package:christmas_buddy/src/services/santa_list_store.dart';
 import 'package:christmas_buddy/src/settings/app_settings.dart';
@@ -39,6 +43,50 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final us = await AppSettings.load(countryCode: 'US');
     expect(us.christmasDay, 25);
+  });
+
+  testWidgets('season choices update the village and restore winter snow', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(await buildApp());
+    Future<void> settle() async {
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+    await settle();
+    for (final season in [Season.winter, Season.spring, Season.summer, Season.autumn, Season.winter]) {
+      tester.state<NavigatorState>(find.byType(Navigator)).pushNamed('/settings');
+      await settle();
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await settle();
+      await tester.tap(find.text(season.label).last);
+      await settle();
+      expect(tester.takeException(), isNull);
+      final slider = tester.widget<Slider>(find.byType(Slider));
+      expect(slider.onChanged == null, season != Season.winter);
+      tester.state<NavigatorState>(find.byType(Navigator)).pop();
+      await settle();
+      expect(tester.widget<ChristmasScene>(find.byType(ChristmasScene)).season, season);
+      final painter = tester.widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((w) => w.painter).whereType<ScenePainter>().single;
+      expect(painter.season, season);
+      expect(find.byType(SnowLayer), season == Season.winter ? findsOneWidget : findsNothing);
+      expect(tester.takeException(), isNull);
+    }
+    tester.state<NavigatorState>(find.byType(Navigator)).pushNamed('/settings');
+    await settle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await settle();
+    await tester.tap(find.text('Automatic').last);
+    await settle();
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await settle();
+    expect(tester.widget<ChristmasScene>(find.byType(ChristmasScene)).season,
+        Season.forDate(DateTime.now()));
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('the nice list can be added to', (tester) async {

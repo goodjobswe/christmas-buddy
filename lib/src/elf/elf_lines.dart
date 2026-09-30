@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:christmas_buddy/src/scene/elf_spots.dart';
+import 'package:christmas_buddy/src/scene/season.dart';
 
 /// What Pip the elf says on the home screen. All lines are original.
 /// `{sleeps}` is replaced with the number of sleeps left.
@@ -81,7 +82,7 @@ class ElfLines {
     'Found already? I need better hiding spots.',
     'Hooray! That deserves a jingle.',
     'You got me! I was admiring the view.',
-    'Well spotted! The snowman gave me away, did he not?',
+    'Well spotted! Did someone give me away?',
   ];
 
   static const List<String> _popUpLines = [
@@ -125,8 +126,33 @@ class ElfLines {
     Random random, {
     required int sleeps,
     required bool isChristmas,
+    Season season = Season.winter,
   }) {
-    final list = isChristmas ? christmasLines : _lines;
+    final seasonal = switch (season) {
+      Season.spring => const [
+        'The flowers are waking up. I have been awake for ages. Mostly.',
+        'A blossom landed on my hat. I am calling it a disguise.',
+        'Spring is here, but I am still counting. {sleeps} sleeps to go!',
+        'I planted a jelly bean. Still waiting for the jelly bean tree.',
+        'The birds are helping me hide. Their singing is a distraction.',
+      ],
+      Season.summer => const [
+        'I counted the fireflies. Then they moved. Starting again.',
+        'Even elves take summer holidays. Mine includes hiding.',
+        'Ice cream now, Christmas later. {sleeps} sleeps later, to be exact.',
+        'The flowers are taller than my boots. Excellent hiding weather.',
+        'Santa is wearing sandals today. Please do not tell anyone.',
+      ],
+      Season.autumn => const [
+        'I tried to catch every falling leaf. I may need a bigger hat.',
+        'The pumpkins are keeping my hiding spot a secret.',
+        'Crunchy leaves, cosy evenings, and {sleeps} sleeps until Christmas.',
+        'I found an acorn in my pocket. The squirrels are investigating.',
+        'The village is wearing its autumn colours. I kept my green hat.',
+      ],
+      Season.winter => _lines,
+    };
+    final list = isChristmas ? christmasLines : seasonal;
     final line = list[random.nextInt(list.length)];
     return line.replaceAll('{sleeps}', '$sleeps');
   }

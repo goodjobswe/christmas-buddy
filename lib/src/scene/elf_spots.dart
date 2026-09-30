@@ -245,7 +245,7 @@ class ElfSpots {
         );
       case 13:
         return ElfSpot(
-          feet: Offset(l.drift.left + l.drift.width * 0.25, l.drift.bottom - u * 0.006),
+          feet: Offset(l.drift.left + l.drift.width * 0.10, l.drift.top + u * 0.022),
           height: u * 0.055,
           after: SceneLayer.tree,
           difficulty: difficulty,

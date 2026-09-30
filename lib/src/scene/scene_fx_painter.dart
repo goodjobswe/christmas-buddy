@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:christmas_buddy/src/scene/scene_events.dart';
 import 'package:christmas_buddy/src/scene/scene_layout.dart';
 import 'package:christmas_buddy/src/scene/scene_painter.dart';
+import 'package:christmas_buddy/src/scene/season.dart';
+import 'package:christmas_buddy/src/scene/season_scenery.dart';
 import 'package:christmas_buddy/src/scene/tree_decorations.dart';
 
 /// A little puff of snow where a tap missed the elf.
@@ -28,11 +30,13 @@ class SceneFxPainter extends CustomPainter {
     required this.events,
     required this.time,
     required this.puffs,
+    this.season = Season.winter,
     this.hintStart,
     this.hintCenter,
   }) : super(repaint: time);
 
   final SceneLayout layout;
+  final Season season;
   final TreeDecorations decorations;
   final SceneEvents events;
   final ValueNotifier<double> time;
@@ -51,7 +55,8 @@ class SceneFxPainter extends CustomPainter {
     _paintStars(canvas, t);
     _paintShootingStar(canvas, t);
     if (events.sleigh) _paintSleigh(canvas, t);
-    _paintSmoke(canvas, t);
+    if (season == Season.winter || season == Season.autumn) _paintSmoke(canvas, t);
+    SeasonScenery(layout, season).breeze(canvas, t);
     _paintLampFlicker(canvas, t);
     _paintLights(canvas, t);
     if (decorations.star) _paintStar(canvas, t);
@@ -331,7 +336,7 @@ class SceneFxPainter extends CustomPainter {
         final a = i * math.pi * 2 / 5 + puff.start;
         final d = u * 0.05 * ease;
         final pos = puff.position + Offset(math.cos(a) * d, math.sin(a) * d - u * 0.02 * ease);
-        paint.color = Colors.white.withValues(alpha: 0.6 * (1 - p));
+        paint.color = season.accent.withValues(alpha: 0.6 * (1 - p));
         c.drawCircle(pos, u * (0.006 + 0.012 * ease), paint);
       }
     }

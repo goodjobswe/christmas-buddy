@@ -42,8 +42,8 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Count the sleeps until Christmas with Pip the elf in a cosy, snowy '
-            'village. Find his new hiding spot each day, watch the tree fill '
+            'Count the sleeps until Christmas with Pip the elf in a cosy '
+            'village that changes with the seasons. Find his new hiding spot each day, watch the tree fill '
             'with decorations through December, and keep track of Santa\'s list.',
             style: body,
           ),
@@ -52,7 +52,8 @@ class AboutScreen extends StatelessWidget {
           _Bullet('Find Pip. He hides somewhere new every day, all year round. Tap around and watch for warmer and colder.', body),
           _Bullet('In December each find counts on the advent calendar. On the 24th he waits by the star.', body),
           _Bullet('Keep Santa\'s nice and naughty lists up to date, and tick off the presents as they are sorted.', body),
-          _Bullet('Blow the snow sideways with a finger, and turn on a daily reminder so you never lose count.', body),
+          _Bullet('Choose a season in Settings, or let the village follow the year automatically.', body),
+          _Bullet('In winter, blow the snow sideways with a finger, and turn on a daily reminder so you never lose count.', body),
           const SizedBox(height: 16),
           const _Heading('Credits'),
           Text('Made by goodjob.', style: body),

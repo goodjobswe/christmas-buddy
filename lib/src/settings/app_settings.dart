@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:christmas_buddy/src/scene/season.dart';
+
 /// How much snow falls. The December day adds on top of this.
 enum SnowIntensity {
   off('Off'),
@@ -19,6 +21,7 @@ class AppSettings extends ChangeNotifier {
   AppSettings(this._prefs);
 
   static const _keyChristmasDay = 'christmas_day';
+  static const _keySeason = 'scene_season';
   static const _keySnow = 'snow_intensity_v2';
   static const _keyMusic = 'music_on';
   static const _keySound = 'sound_on';
@@ -51,6 +54,26 @@ class AppSettings extends ChangeNotifier {
   Future<void> setChristmasDay(int day) async {
     assert(day == 24 || day == 25);
     await _prefs.setInt(_keyChristmasDay, day);
+    notifyListeners();
+  }
+
+  /// Null means follow the calendar. Unknown values also fall back to automatic.
+  Season? get season {
+    final saved = _prefs.getString(_keySeason);
+    for (final value in Season.values) {
+      if (value.name == saved) return value;
+    }
+    return null;
+  }
+
+  Season seasonFor(DateTime date) => season ?? Season.forDate(date);
+
+  Future<void> setSeason(Season? value) async {
+    if (value == null) {
+      await _prefs.remove(_keySeason);
+    } else {
+      await _prefs.setString(_keySeason, value.name);
+    }
     notifyListeners();
   }
 

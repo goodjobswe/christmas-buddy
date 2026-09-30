@@ -46,6 +46,15 @@ void main() {
     }
   });
 
+  test('Pip peeks above the seasonal mound rather than being buried by it', () {
+    for (final size in sizes) {
+      final layout = SceneLayout(size);
+      final spot = ElfSpots.resolve(13, layout);
+      final faceBottom = spot.rect.top + spot.height * 0.55;
+      expect(faceBottom, lessThan(layout.drift.top), reason: 'face hidden at $size');
+    }
+  });
+
   test('index wraps around', () {
     final layout = SceneLayout(const Size(411, 890));
     expect(ElfSpots.resolve(ElfSpots.count, layout).feet, ElfSpots.resolve(0, layout).feet);

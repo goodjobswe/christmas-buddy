@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:christmas_buddy/src/countdown/christmas_countdown.dart';
+import 'package:christmas_buddy/src/scene/season.dart';
 
 /// The little surprises that vary from day to day, picked from the date so
 /// everyone sees the same village on the same day.
@@ -20,26 +21,34 @@ class SceneEvents {
   /// Santa's sleigh crosses the moon (24 and 25 December).
   final bool sleigh;
 
-  static SceneEvents forDate(DateTime date) {
+  static SceneEvents forDate(DateTime date, {Season? season}) {
+    final winter = (season ?? Season.forDate(date)) == Season.winter;
     final random = math.Random(date.year * 1000 + ChristmasCountdown.dayOfYear(date));
     final roll = random.nextInt(12);
     final lucia = date.month == 12 && date.day == 13;
     final christmas = date.month == 12 && (date.day == 24 || date.day == 25);
     return SceneEvents(
-      aurora: lucia || christmas || roll < 3,
+      aurora: winter && (lucia || christmas || roll < 3),
       reindeerStation: christmas ? 0 : (roll >= 3 && roll < 7 ? (roll - 3) % 2 : null),
       sleigh: christmas,
     );
   }
 
   /// One or two sentences for the found dialog about what changed today.
-  static String notice(DateTime date) {
-    final events = forDate(date);
+  static String notice(DateTime date, {Season? season}) {
+    final currentSeason = season ?? Season.forDate(date);
+    final events = forDate(date, season: currentSeason);
     final day = ChristmasCountdown.decorationDay(date);
     final buffer = StringBuffer();
 
     if (day == 0) {
-      buffer.write('The tree stays bare until 1 December. Then something new goes up every day.');
+      buffer.write(switch (currentSeason) {
+        Season.spring => 'Blossom is drifting through the village. Can you spot the flowers?',
+        Season.summer => 'The garden is in bloom and fireflies are glowing in the evening air.',
+        Season.autumn => 'Golden leaves are falling, and the pumpkins are ready for autumn.',
+        Season.winter => 'The village is tucked under its blanket of snow.',
+      });
+      buffer.write(' The Christmas decorations begin on 1 December.');
     } else if (day == 1) {
       buffer.write('The first string of lights went up on the tree today.');
     } else if (day == 24) {
