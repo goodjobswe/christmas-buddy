@@ -55,16 +55,11 @@ class AboutScreen extends StatelessWidget {
           _Bullet('Blow the snow sideways with a finger, and turn on a daily reminder so you never lose count.', body),
           const SizedBox(height: 16),
           const _Heading('Credits'),
-          Text(
-            'Made by Glenn Höglund at goodjob. Everything in the picture is drawn by '
-            'the app itself, so there is nothing to credit but a lot of little triangles.',
-            style: body,
-          ),
+          Text('Made by goodjob.', style: body),
           const SizedBox(height: 8),
           Text(
-            'Music: music box arrangements of traditional carols, all in the public '
-            'domain, synthesised for this app. Fonts: Open Sans and Rochester from '
-            'Google Fonts, both under open licences.',
+            'Fonts: Open Sans and Rochester, from Google Fonts under their open '
+            'licences. The carols are traditional melodies in the public domain.',
             style: body,
           ),
           const SizedBox(height: 8),
