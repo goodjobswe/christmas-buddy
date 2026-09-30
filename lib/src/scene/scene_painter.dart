@@ -667,12 +667,12 @@ class ScenePainter extends CustomPainter {
   void _paintForeground(Canvas c) {
     final l = layout;
     _paintLampGlow(c, l.lamp);
-    _paintPine(c, l.leftPine);
     final station = events.reindeerStation;
     if (station != null && station == 1) {
       _paintReindeer(c, l.reindeerStations[1]);
     }
     _paintBench(c, l.bench);
+    _paintPine(c, l.leftPine);
     _paintSled(c, l.sled);
     _paintLamp(c, l.lamp);
     if (station != null && station == 0) {
@@ -837,7 +837,9 @@ class ScenePainter extends CustomPainter {
     c.drawRect(Rect.fromLTWH(r.left, r.top + r.height * 0.28, r.width, railH), wood);
     c.drawRect(Rect.fromLTWH(r.left, r.top + r.height * 0.64, r.width, railH), wood);
     final snowDab = Paint()..color = SceneColors.snowBright;
-    for (var x = r.left; x <= r.right + 0.1; x += fence.postSpacing) {
+    final gaps = math.max(1, (r.width / fence.postSpacing).round());
+    for (var i = 0; i <= gaps; i++) {
+      final x = r.left + r.width * i / gaps;
       final post = Rect.fromLTWH(x - u * 0.006, r.top, u * 0.012, r.height);
       c.drawPath(
         Path()

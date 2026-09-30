@@ -277,7 +277,7 @@ class ElfSpots {
           reaction: ElfReaction.peekOut,
         );
       case 17:
-        final y = l.h * 0.83;
+        final y = l.h * 0.76;
         return ElfSpot(
           feet: Offset(l.rightPine.tip.dx - l.rightPine.halfWidthAt(y) - u * 0.004, y),
           height: u * 0.055,

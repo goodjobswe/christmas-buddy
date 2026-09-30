@@ -175,7 +175,7 @@ class SceneLayout {
     signpost = Signpost(base: Offset(w * 0.93, h * 0.79), height: unit * 0.15);
 
     leftPine = Pine(tip: Offset(w * 0.03, h * 0.66), height: h * 0.30, halfWidth: unit * 0.13);
-    rightPine = Pine(tip: Offset(w * 0.95, h * 0.70), height: h * 0.26, halfWidth: unit * 0.11);
+    rightPine = Pine(tip: Offset(w * 0.975, h * 0.72), height: h * 0.24, halfWidth: unit * 0.09);
 
     drift = Rect.fromLTWH(w * 0.36, h * 0.815, unit * 0.22, unit * 0.05);
 
