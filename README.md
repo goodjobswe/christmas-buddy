@@ -1,115 +1,86 @@
 # Christmas Buddy
 
-Count the sleeps until Christmas in a little snowy village that comes alive as
-December goes on. Every day the tree gets a bit more decorated, the snow falls a
-bit harder, and Pip the elf finds a new place to hide.
+Count the sleeps until Christmas with Pip the elf in a cosy, snowy village. Find his new hiding spot each day, watch the tree fill with decorations through December, and keep track of Santa's list.
 
-Flutter, Android and iOS. Everything on screen is drawn by the app itself, the
-music is synthesised from public domain carols, and nothing leaves the phone.
+Christmas Buddy is a free, open-source Android app built with Flutter. It works offline, with your lists, settings and discoveries saved on your device. No account is needed.
 
-## What it does
+## Screenshots
 
-- **Countdown.** A big number of sleeps until Christmas, plus days, hours,
-  minutes and seconds. Christmas Eve or Christmas Day is picked from the
-  phone's country and can be changed in Settings.
-- **The village.** A drawn night scene with mountains, a church, houses with
-  warm windows, a lamp post, a bench, a snowman, a woodpile, a postbox, two
-  village children in beanies, birds and a big tree. In December the tree gains
-  lights, baubles, garlands, candy canes and presents day by day, and the star
-  lands on the top on the 24th. Some nights bring northern lights, some days a
-  reindeer wanders in, shooting stars cross the sky, and on the 24th Santa's
-  sleigh passes the moon.
-- **Find Pip.** The elf hides in one of 36 spots, somewhere new every day, all
-  year round. Each year shuffles the order, easy and hard days are spread out,
-  and 1 December is always easy. Tap around and the app tells you if you are
-  getting warmer. Finding him brings a jingle, a reaction that fits the spot
-  (he pops out of chimneys, wobbles on roofs, peeks out from behind things), a
-  line from Pip and a note about what changed in the village today. December
-  finds are kept on an advent style calendar, and a hint button appears if he
-  stays hidden too long.
-- **Snow.** Three depths of flakes with sway and wind. Drag a finger across the
-  screen to blow the snow sideways. Intensity is adjustable and grows through
-  December.
-- **Carols.** Music box arrangements of Jingle Bells, We Wish You a Merry
-  Christmas, Deck the Halls, Silent Night, O Christmas Tree and Good King
-  Wenceslas, shuffled and looped, with a mute button on the home screen.
-- **Santa's list.** A nice list with presents to tick off and a naughty list
-  with reasons, stored on the device.
-- **Daily reminder.** An optional morning notification in December with the
-  sleeps left.
-- **Share.** Sends a picture of the countdown through the system share sheet,
-  no storage permission needed.
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="assets/screenshots/countdown.png" alt="Christmas countdown above a snowy village with a decorated tree" width="240"></td>
+    <td align="center" width="33%"><img src="assets/screenshots/calendar.png" alt="Pip's December calendar for keeping track of daily discoveries" width="240"></td>
+    <td align="center" width="33%"><img src="assets/screenshots/santas-list.png" alt="Santa's nice list with presents to tick off" width="240"></td>
+  </tr>
+  <tr>
+    <td align="center">Count the sleeps</td>
+    <td align="center">Find Pip every day</td>
+    <td align="center">Keep Santa organised</td>
+  </tr>
+</table>
 
-## Building
+Captured on an Android 15 emulator with sample gift ideas and the app's date set to 20 December for a preview of the festive season. [View all screenshots](assets/screenshots).
 
-```
+## Features
+
+- **Your Christmas countdown:** count down to Christmas Eve or Christmas Day.
+- **A village that changes:** discover new tree decorations and seasonal surprises as December unfolds.
+- **Find Pip:** look for a new hiding spot every day, follow warmer and colder clues, and collect December finds on an advent calendar.
+- **Snow and carols:** swipe to stir the snow and enjoy six familiar Christmas tunes, with adjustable snow and sound settings.
+- **Santa's list:** keep nice and naughty lists, add gift ideas, and tick off presents as they are ready.
+- **Reminders and sharing:** choose a daily December reminder or share a picture of your countdown.
+
+## Run on Android
+
+Install Flutter, the Android SDK and a compatible Java JDK. Start an Android emulator or connect a phone with USB debugging enabled. The current development baseline is Flutter 3.29.3 / Dart 3.7.2.
+
+```sh
 flutter pub get
-flutter run
+flutter devices
+flutter run -d ANDROID_DEVICE_ID
 ```
 
-Tests:
+Replace `ANDROID_DEVICE_ID` with the device ID shown by `flutter devices`.
 
+The app is not currently available in an app store. To build an APK for local installation:
+
+```sh
+flutter build apk --release
 ```
+
+The APK is written to `build/app/outputs/flutter-apk/app-release.apk`. Release builds currently use the development signing key.
+
+## Development
+
+```sh
+flutter analyze
 flutter test
 ```
 
-To look at the picture without a device, the render tool writes PNGs of the
-scene on several days, every hiding spot and each screen:
+To preview December without changing the device's date:
 
-```
-RENDER_OUT=C:\some\folder flutter test test/tools/render_test.dart
-```
-
-With `RENDER_ICONS=1` added it also regenerates `assets/icon/` from the same
-elf drawing. To see where Pip hides on a day, or all of December:
-
-```
-PRINT_SCHEDULE=2026-12-20 flutter test test/tools/schedule_test.dart
-PRINT_SCHEDULE=2026 flutter test test/tools/schedule_test.dart
-``` After that:
-
-```
-dart run flutter_launcher_icons
-dart run flutter_native_splash:create
+```sh
+flutter run -d ANDROID_DEVICE_ID --dart-define=FAKE_DATE=2026-12-20T18:30:00
 ```
 
-The music and sound effects are generated by `scripts/make_music.py`
-(Python 3 with numpy and soundfile). The melodies are transcribed from public
-domain sources noted in the script.
+Build without `FAKE_DATE` to use the real date again.
 
-The app is not distributed through any store. To put it on a phone, plug the
-phone in and run `flutter run --release`, or build an APK with
-`flutter build apk` and install that.
+The render tool can export scenes, hiding spots and app screens. In PowerShell:
 
-## Layout
-
-```
-lib/
-  main.dart                  app start, routes, theme
-  src/countdown/             date logic and the countdown panel
-  src/scene/                 layout, static painter, effects painter, decorations, hiding spots
-  src/elf/                   Pip's drawing, lines and the found dialog
-  src/snow/                  snow layer
-  src/audio/                 carols and sound effects
-  src/screens/               home, Santa's list, hiding spots, settings, about
-  src/settings/              preferences
-  src/notifications/         daily reminder
-scripts/make_music.py        music generator
-test/                        unit and widget tests, render tool
+```powershell
+$env:RENDER_OUT = "$PWD/build/renders"
+flutter test test/tools/render_test.dart
+Remove-Item Env:RENDER_OUT
 ```
 
-## Licences
+Set `RENDER_ICONS=1` to regenerate the icon artwork too, then run `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`. The music generator is in `scripts/make_music.py` and requires Python, NumPy and SoundFile.
 
-- Code: MIT, see [LICENSE](LICENSE).
-- Fonts: Open Sans and Rochester, from Google Fonts under their open licences,
-  in `assets/fonts/`.
-- Music: the carol melodies are public domain; the arrangements and recordings
-  are generated by the script in this repository and are covered by the same
-  MIT licence.
-- Artwork: drawn in code, MIT.
+The main app code is in `lib/src/`, grouped by screen and feature. Tests and rendering tools are in `test/`.
 
-## History
+## Credits and licence
 
-The first version from 2022 used photos and stock characters and was briefly on
-Google Play. The 2026 makeover replaced everything with original drawings and
-music so the project could be published as open source.
+- Code and artwork: [MIT](LICENSE).
+- Fonts: Open Sans and Rochester, from Google Fonts under their open licences.
+- Music: traditional public-domain carols, with arrangements and recordings covered by the project's MIT licence.
+
+Christmas Buddy first appeared on Google Play in 2022. The 2026 version brings a new village, Pip the elf and an open-source home for the project.

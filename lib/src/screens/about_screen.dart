@@ -42,9 +42,9 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'A countdown to Christmas with a village that comes alive as December '
-            'goes on. Every day the tree gets a little more decorated, the snow '
-            'falls a little harder, and Pip the elf finds a new place to hide.',
+            'Count the sleeps until Christmas with Pip the elf in a cosy, snowy '
+            'village. Find his new hiding spot each day, watch the tree fill '
+            'with decorations through December, and keep track of Santa\'s list.',
             style: body,
           ),
           const SizedBox(height: 16),
@@ -70,10 +70,9 @@ class AboutScreen extends StatelessWidget {
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: [
-              FilledButton.icon(
+              TextButton(
                 onPressed: () => _open(context, website),
-                icon: const Icon(Icons.language),
-                label: const Text('goodjob.nu'),
+                child: const Text('goodjob.nu'),
               ),
               OutlinedButton.icon(
                 onPressed: () => _open(context, source),
