@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 
 import 'package:christmas_buddy/src/elf/elf_painter.dart';
 
-/// The celebration when the elf is found: sparkles, a jumping Pip and a line.
+/// The celebration when the elf is found: sparkles, a jumping Pip, a line,
+/// and a note about what changed in the village today.
 Future<void> showFoundDialog(
   BuildContext context, {
   required String line,
   required String detail,
+  String? notice,
 }) {
   return showDialog<void>(
     context: context,
@@ -52,6 +54,29 @@ Future<void> showFoundDialog(
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
                   ),
+                  if (notice != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF4D6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Did you notice?',
+                            style: TextStyle(fontFamily: 'Rochester', fontSize: 22, color: Color(0xFF8A5A00)),
+                          ),
+                          Text(
+                            notice,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 13, height: 1.35, color: Color(0xFF3A2A10)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   FilledButton(
                     onPressed: () => Navigator.of(context).pop(),

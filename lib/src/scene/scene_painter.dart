@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:christmas_buddy/src/elf/elf_painter.dart';
 import 'package:christmas_buddy/src/scene/elf_spots.dart';
+import 'package:christmas_buddy/src/scene/scene_events.dart';
 import 'package:christmas_buddy/src/scene/scene_layout.dart';
 import 'package:christmas_buddy/src/scene/tree_decorations.dart';
 
@@ -15,6 +16,7 @@ class SceneColors {
   static const farCrest = Color(0xFF8E9FD0);
   static const nearMountain = Color(0xFF2C3D70);
   static const nearCrest = Color(0xFF6E80B3);
+  static const slopePine = Color(0xFF1C2B4E);
   static const snow = Color(0xFFE6EDF8);
   static const snowShade = Color(0xFFCBD8EC);
   static const snowBright = Color(0xFFF7FAFF);
@@ -28,9 +30,13 @@ class SceneColors {
   static const windowGlow = Color(0xFFFFC860);
   static const door = Color(0xFF3A2A22);
   static const cornerBoard = Color(0xFFF4F4F4);
+  static const churchWall = Color(0xFFF3EEE6);
   static const lampPost = Color(0xFF262626);
   static const lampLight = Color(0xFFFFE2A6);
-  static const fence = Color(0xFF6B5240);
+  static const wood = Color(0xFF6B5240);
+  static const woodDark = Color(0xFF4A3A2A);
+  static const logEnd = Color(0xFFD9B48F);
+  static const log = Color(0xFF8B5E3C);
   static const sled = Color(0xFF8B4A2A);
   static const runner = Color(0xFFB0B8C8);
   static const coal = Color(0xFF222222);
@@ -39,25 +45,30 @@ class SceneColors {
   static const gold = Color(0xFFE9C46A);
   static const goldLight = Color(0xFFF6E3A1);
   static const starGold = Color(0xFFFFD75E);
+  static const reindeer = Color(0xFF7A4B2A);
+  static const reindeerDark = Color(0xFF4A2F1A);
+  static const cream = Color(0xFFEFE6D8);
   static const shadow = Color(0x22000000);
 }
 
 /// The village, mountains, tree and its decorations, plus the hidden elf.
 /// Everything here is static for a given day, so it sits in its own
-/// repaint boundary and is only repainted when the elf animates.
+/// repaint boundary and is only repainted while the elf reacts.
 class ScenePainter extends CustomPainter {
   const ScenePainter({
     required this.layout,
     required this.decorations,
+    required this.events,
     this.elfSpot,
-    this.elfPose = ElfPose.idle,
+    this.elfReacting = false,
     this.elfT = 0,
   });
 
   final SceneLayout layout;
   final TreeDecorations decorations;
+  final SceneEvents events;
   final ElfSpot? elfSpot;
-  final ElfPose elfPose;
+  final bool elfReacting;
   final double elfT;
 
   double get u => layout.unit;
@@ -70,6 +81,8 @@ class ScenePainter extends CustomPainter {
     _elfAfter(canvas, SceneLayer.mountains);
     _paintGround(canvas);
     _elfAfter(canvas, SceneLayer.ground);
+    _paintBackVillage(canvas);
+    _elfAfter(canvas, SceneLayer.backVillage);
     _paintVillage(canvas);
     _elfAfter(canvas, SceneLayer.village);
     _paintTree(canvas);
@@ -78,13 +91,52 @@ class ScenePainter extends CustomPainter {
     _elfAfter(canvas, SceneLayer.foreground);
   }
 
+  // The elf ---------------------------------------------------------------
+
   void _elfAfter(Canvas canvas, SceneLayer layer) {
     final spot = elfSpot;
     if (spot == null || spot.after != layer) return;
+
+    var rect = spot.rect;
+    var clip = spot.visibleRect;
+    var pose = ElfPose.idle;
+    var t = 0.0;
+    var rotation = 0.0;
+
+    if (elfReacting) {
+      t = elfT;
+      final swell = math.sin(math.pi * t);
+      switch (spot.reaction) {
+        case ElfReaction.wave:
+          pose = ElfPose.wave;
+        case ElfReaction.popUp:
+          pose = ElfPose.wave;
+          final lift = ((1 - spot.visible) * spot.height + spot.height * 0.15) * swell;
+          rect = rect.shift(Offset(0, -lift));
+          clip = Rect.fromLTRB(clip.left, clip.top - lift - spot.height * 0.2, clip.right, clip.bottom);
+        case ElfReaction.peekOut:
+          pose = ElfPose.wave;
+          final dx = spot.width * 0.7 * swell * (spot.facingRight ? 1 : -1);
+          rect = rect.shift(Offset(dx, 0));
+          clip = clip.shift(Offset(dx, 0));
+        case ElfReaction.tumble:
+          pose = ElfPose.wave;
+          rotation = math.sin(t * math.pi * 4) * 0.35 * (1 - t);
+          clip = clip.inflate(spot.height * 0.4);
+        case ElfReaction.jump:
+          pose = ElfPose.jump;
+          clip = Rect.fromLTRB(clip.left, clip.top - spot.height * 0.25, clip.right, clip.bottom);
+      }
+    }
+
     canvas.save();
-    canvas.clipRect(spot.visibleRect);
-    ElfPainter(pose: elfPose, t: elfT, facingRight: spot.facingRight)
-        .paintInto(canvas, spot.rect);
+    canvas.clipRect(clip);
+    if (rotation != 0) {
+      canvas.translate(spot.feet.dx, spot.feet.dy);
+      canvas.rotate(rotation);
+      canvas.translate(-spot.feet.dx, -spot.feet.dy);
+    }
+    ElfPainter(pose: pose, t: t, facingRight: spot.facingRight).paintInto(canvas, rect);
     canvas.restore();
   }
 
@@ -132,6 +184,9 @@ class ScenePainter extends CustomPainter {
   void _paintMountains(Canvas c) {
     _paintRange(c, layout.farRidge, layout.h * 0.64, SceneColors.farMountain, SceneColors.farCrest);
     _paintRange(c, layout.nearRidge, layout.h * 0.66, SceneColors.nearMountain, SceneColors.nearCrest);
+    for (final pine in layout.slopePines) {
+      _paintPine(c, pine, color: SceneColors.slopePine, snow: false, trunk: false);
+    }
   }
 
   void _paintRange(Canvas c, List<Offset> ridge, double baseY, Color fill, Color crest) {
@@ -210,13 +265,32 @@ class ScenePainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = u * 0.008,
     );
+
+    for (final pine in l.hillPines) {
+      _paintPine(c, pine, trunk: false);
+    }
   }
 
   // Village --------------------------------------------------------------
 
+  void _paintBackVillage(Canvas c) {
+    for (final house in layout.backHouses) {
+      _paintHouse(c, house);
+    }
+    _paintChurch(c, layout.church);
+  }
+
   void _paintVillage(Canvas c) {
     for (final house in layout.houses) {
       _paintHouse(c, house);
+    }
+    _paintPostbox(c, layout.postbox);
+    _paintWoodpile(c, layout.woodpile);
+    for (var i = 0; i < layout.giftStack.length; i++) {
+      _paintGift(c, layout.giftStack[i], i + 1);
+    }
+    for (final bird in layout.birds) {
+      _paintBird(c, bird);
     }
   }
 
@@ -290,7 +364,7 @@ class ScenePainter extends CustomPainter {
     );
   }
 
-  void _paintWindow(Canvas c, Rect win) {
+  void _paintWindow(Canvas c, Rect win, {bool arched = false}) {
     final glowRect = Rect.fromCenter(center: win.center, width: win.width * 3.6, height: win.width * 3.6);
     c.drawOval(
       glowRect,
@@ -299,12 +373,149 @@ class ScenePainter extends CustomPainter {
           colors: [SceneColors.windowGlow.withValues(alpha: 0.5), SceneColors.windowGlow.withValues(alpha: 0)],
         ).createShader(glowRect),
     );
-    c.drawRect(win, Paint()..color = SceneColors.window);
+    final paint = Paint()..color = SceneColors.window;
+    if (arched) {
+      c.drawRRect(
+        RRect.fromRectAndCorners(
+          win,
+          topLeft: Radius.circular(win.width / 2),
+          topRight: Radius.circular(win.width / 2),
+        ),
+        paint,
+      );
+      return;
+    }
+    c.drawRect(win, paint);
     final bar = Paint()
       ..color = const Color(0xFF6B4F2A)
       ..strokeWidth = math.max(1, win.width * 0.08);
     c.drawLine(Offset(win.center.dx, win.top), Offset(win.center.dx, win.bottom), bar);
     c.drawLine(Offset(win.left, win.center.dy), Offset(win.right, win.center.dy), bar);
+  }
+
+  void _paintChurch(Canvas c, Church church) {
+    final body = church.body;
+    final tower = church.tower;
+    final o = body.width * 0.08;
+
+    c.drawRect(body, Paint()..color = SceneColors.churchWall);
+    final roofH = body.width * 0.32;
+    final roof = Path()
+      ..moveTo(body.left - o, body.top + o * 0.5)
+      ..lineTo(body.center.dx, body.top - roofH)
+      ..lineTo(body.right + o, body.top + o * 0.5)
+      ..close();
+    c.drawPath(roof, Paint()..color = SceneColors.roof);
+    c.drawPath(
+      Path()
+        ..moveTo(body.left - o * 0.3, body.top - roofH * 0.2)
+        ..lineTo(body.center.dx, body.top - roofH * 0.95)
+        ..lineTo(body.right + o * 0.3, body.top - roofH * 0.2)
+        ..close(),
+      Paint()..color = SceneColors.snowBright,
+    );
+    for (final win in church.windows) {
+      _paintWindow(c, win, arched: true);
+    }
+
+    c.drawRect(tower, Paint()..color = SceneColors.churchWall);
+    c.drawRect(
+      Rect.fromLTRB(tower.right - tower.width * 0.25, tower.top, tower.right, tower.bottom),
+      Paint()..color = const Color(0x1A000000),
+    );
+    final bell = church.bell;
+    c.drawRRect(
+      RRect.fromRectAndCorners(
+        bell,
+        topLeft: Radius.circular(bell.width / 2),
+        topRight: Radius.circular(bell.width / 2),
+      ),
+      Paint()..color = const Color(0xFF2A1E18),
+    );
+    c.drawCircle(bell.center + Offset(0, bell.height * 0.1), bell.width * 0.26, Paint()..color = SceneColors.gold);
+
+    final spire = Path()
+      ..moveTo(tower.left - u * 0.004, tower.top)
+      ..lineTo(church.spireTip.dx, church.spireTip.dy)
+      ..lineTo(tower.right + u * 0.004, tower.top)
+      ..close();
+    c.drawPath(spire, Paint()..color = SceneColors.roof);
+    c.drawLine(
+      Offset(tower.left - u * 0.004, tower.top),
+      church.spireTip,
+      Paint()
+        ..color = SceneColors.snowBright
+        ..strokeWidth = u * 0.006
+        ..strokeCap = StrokeCap.round,
+    );
+    final cross = Paint()
+      ..color = SceneColors.gold
+      ..strokeWidth = u * 0.004
+      ..strokeCap = StrokeCap.round;
+    final tip = church.spireTip;
+    c.drawLine(tip, tip - Offset(0, u * 0.016), cross);
+    c.drawLine(tip - Offset(u * 0.005, u * 0.011), tip - Offset(-u * 0.005, u * 0.011), cross);
+  }
+
+  void _paintPostbox(Canvas c, Rect box) {
+    c.drawRect(
+      Rect.fromLTRB(box.center.dx - u * 0.003, box.bottom, box.center.dx + u * 0.003, layout.villageBase),
+      Paint()..color = SceneColors.woodDark,
+    );
+    c.drawRRect(
+      RRect.fromRectAndRadius(box, Radius.circular(box.width * 0.2)),
+      Paint()..color = ElfColors.red,
+    );
+    c.drawRect(
+      Rect.fromLTWH(box.left + box.width * 0.2, box.top + box.height * 0.3, box.width * 0.6, box.height * 0.1),
+      Paint()..color = Colors.white,
+    );
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(box.left - box.width * 0.08, box.top - box.height * 0.12, box.width * 1.16, box.height * 0.22),
+        Radius.circular(box.width * 0.1),
+      ),
+      Paint()..color = SceneColors.snowBright,
+    );
+  }
+
+  void _paintWoodpile(Canvas c, Rect pile) {
+    final r = pile.height / 5.2;
+    final logPaint = Paint()..color = SceneColors.log;
+    final endPaint = Paint()..color = SceneColors.logEnd;
+    final rows = [4, 3, 2];
+    for (var row = 0; row < rows.length; row++) {
+      final count = rows[row];
+      final y = pile.bottom - r - row * r * 1.75;
+      final startX = pile.center.dx - (count - 1) * r;
+      for (var i = 0; i < count; i++) {
+        final center = Offset(startX + i * r * 2, y);
+        c.drawCircle(center, r, logPaint);
+        c.drawCircle(center, r * 0.6, endPaint);
+      }
+    }
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(pile.center.dx, pile.top + r * 0.2), width: r * 4.4, height: r * 0.9),
+        Radius.circular(r * 0.4),
+      ),
+      Paint()..color = SceneColors.snowBright,
+    );
+  }
+
+  void _paintBird(Canvas c, Offset perch) {
+    final r = u * 0.0065;
+    c.drawCircle(perch + Offset(0, -r), r, Paint()..color = ElfColors.red);
+    c.drawCircle(perch + Offset(r * 0.9, -r * 1.9), r * 0.7, Paint()..color = SceneColors.coal);
+    c.drawPath(
+      Path()
+        ..moveTo(perch.dx - r * 0.6, perch.dy - r * 1.2)
+        ..lineTo(perch.dx - r * 2.2, perch.dy - r * 1.6)
+        ..lineTo(perch.dx - r * 2.0, perch.dy - r * 0.6)
+        ..close(),
+      Paint()..color = SceneColors.coal,
+    );
+    c.drawCircle(perch + Offset(r * 1.7, -r * 1.9), r * 0.25, Paint()..color = SceneColors.gold);
   }
 
   // Tree -----------------------------------------------------------------
@@ -435,8 +646,8 @@ class ScenePainter extends CustomPainter {
   }
 
   void _paintGift(Canvas c, Rect box, int index) {
-    const colors = [ElfColors.red, Color(0xFF3F7FD6), SceneColors.gold];
-    const ribbons = [SceneColors.goldLight, Colors.white, ElfColors.red];
+    const colors = [ElfColors.red, Color(0xFF3F7FD6), SceneColors.gold, ElfColors.green];
+    const ribbons = [SceneColors.goldLight, Colors.white, ElfColors.red, SceneColors.goldLight];
     c.drawRect(box, Paint()..color = colors[index % colors.length]);
     final ribbon = Paint()..color = ribbons[index % ribbons.length];
     c.drawRect(
@@ -457,28 +668,42 @@ class ScenePainter extends CustomPainter {
     final l = layout;
     _paintLampGlow(c, l.lamp);
     _paintPine(c, l.leftPine);
+    final station = events.reindeerStation;
+    if (station != null && station == 1) {
+      _paintReindeer(c, l.reindeerStations[1]);
+    }
+    _paintBench(c, l.bench);
     _paintSled(c, l.sled);
     _paintLamp(c, l.lamp);
+    if (station != null && station == 0) {
+      _paintReindeer(c, l.reindeerStations[0]);
+    }
     _paintFence(c, l.fence);
     _paintSnowman(c, l.snowman);
     _paintDrift(c, l.drift);
+    for (final v in l.villagers) {
+      _paintVillager(c, v);
+    }
     _paintPine(c, l.rightPine);
+    _paintSignpost(c, l.signpost);
   }
 
-  void _paintPine(Canvas c, Pine pine) {
+  void _paintPine(Canvas c, Pine pine, {Color color = SceneColors.pine, bool snow = true, bool trunk = true}) {
     final snowPaint = Paint()
       ..color = SceneColors.snowShade
       ..style = PaintingStyle.stroke
-      ..strokeWidth = u * 0.01
+      ..strokeWidth = math.max(1, pine.height * 0.035)
       ..strokeCap = StrokeCap.round;
-    c.drawRect(
-      Rect.fromCenter(
-        center: Offset(pine.tip.dx, pine.bottom + u * 0.015),
-        width: u * 0.03,
-        height: u * 0.05,
-      ),
-      Paint()..color = SceneColors.trunk,
-    );
+    if (trunk) {
+      c.drawRect(
+        Rect.fromCenter(
+          center: Offset(pine.tip.dx, pine.bottom + u * 0.015),
+          width: u * 0.03,
+          height: u * 0.05,
+        ),
+        Paint()..color = SceneColors.trunk,
+      );
+    }
     for (var j = 2; j >= 0; j--) {
       final apex = Offset(pine.tip.dx, pine.tip.dy + pine.height * 0.22 * j);
       final baseY = pine.tip.dy + pine.height * (0.45 + 0.275 * j);
@@ -491,10 +716,12 @@ class ScenePainter extends CustomPainter {
           ..lineTo(right.dx, right.dy)
           ..lineTo(left.dx, left.dy)
           ..close(),
-        Paint()..color = SceneColors.pine,
+        Paint()..color = color,
       );
-      c.drawLine(left, Offset.lerp(left, apex, 0.25)!, snowPaint);
-      c.drawLine(right, Offset.lerp(right, apex, 0.25)!, snowPaint);
+      if (snow) {
+        c.drawLine(left, Offset.lerp(left, apex, 0.25)!, snowPaint);
+        c.drawLine(right, Offset.lerp(right, apex, 0.25)!, snowPaint);
+      }
     }
   }
 
@@ -522,6 +749,28 @@ class ScenePainter extends CustomPainter {
       ..color = const Color(0x33000000)
       ..strokeWidth = math.max(1, u * 0.003);
     c.drawLine(Offset(sled.left, sled.center.dy), Offset(sled.right, sled.center.dy), slat);
+  }
+
+  void _paintBench(Canvas c, Bench bench) {
+    final seat = bench.seat;
+    final wood = Paint()..color = SceneColors.wood;
+    final dark = Paint()..color = SceneColors.woodDark;
+    final legW = seat.width * 0.06;
+    c.drawRect(Rect.fromLTRB(seat.left + legW, seat.bottom, seat.left + legW * 2, bench.legBottom), dark);
+    c.drawRect(Rect.fromLTRB(seat.right - legW * 2, seat.bottom, seat.right - legW, bench.legBottom), dark);
+    c.drawRect(Rect.fromLTRB(seat.left + legW, bench.backTop, seat.left + legW * 2, seat.top), dark);
+    c.drawRect(Rect.fromLTRB(seat.right - legW * 2, bench.backTop, seat.right - legW, seat.top), dark);
+    final slatH = (seat.top - bench.backTop) * 0.3;
+    c.drawRect(Rect.fromLTWH(seat.left, bench.backTop, seat.width, slatH), wood);
+    c.drawRect(Rect.fromLTWH(seat.left, bench.backTop + slatH * 1.7, seat.width, slatH), wood);
+    c.drawRRect(RRect.fromRectAndRadius(seat, Radius.circular(seat.height * 0.3)), wood);
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(seat.left - u * 0.002, seat.top - seat.height * 0.5, seat.width + u * 0.004, seat.height * 0.7),
+        Radius.circular(seat.height * 0.3),
+      ),
+      Paint()..color = SceneColors.snowBright,
+    );
   }
 
   void _paintLampGlow(Canvas c, Lamp lamp) {
@@ -583,7 +832,7 @@ class ScenePainter extends CustomPainter {
 
   void _paintFence(Canvas c, Fence fence) {
     final r = fence.rect;
-    final wood = Paint()..color = SceneColors.fence;
+    final wood = Paint()..color = SceneColors.wood;
     final railH = r.height * 0.14;
     c.drawRect(Rect.fromLTWH(r.left, r.top + r.height * 0.28, r.width, railH), wood);
     c.drawRect(Rect.fromLTWH(r.left, r.top + r.height * 0.64, r.width, railH), wood);
@@ -623,7 +872,6 @@ class ScenePainter extends CustomPainter {
     ball(sm.bottom, sm.bottomRadius);
     ball(sm.middle, sm.middleRadius);
 
-    // Twig arms.
     final twig = Paint()
       ..color = SceneColors.twig
       ..strokeWidth = u * 0.006
@@ -643,7 +891,6 @@ class ScenePainter extends CustomPainter {
 
     ball(sm.head, sm.headRadius);
     final hr = sm.headRadius;
-    // Scarf around the neck with a tail.
     final scarf = Paint()
       ..color = ElfColors.red
       ..style = PaintingStyle.stroke
@@ -656,7 +903,6 @@ class ScenePainter extends CustomPainter {
       sm.head + Offset(-hr * 1.35, hr * 2.1),
       scarf,
     );
-    // Face: eyes, carrot pointing at the tree, a smile of coal.
     c.drawCircle(sm.head + Offset(-hr * 0.35, -hr * 0.2), hr * 0.12, coal);
     c.drawCircle(sm.head + Offset(hr * 0.05, -hr * 0.22), hr * 0.12, coal);
     c.drawPath(
@@ -670,7 +916,6 @@ class ScenePainter extends CustomPainter {
     for (var i = 0; i < 3; i++) {
       c.drawCircle(sm.head + Offset(-hr * 0.45 + hr * 0.3 * i, hr * 0.45 + (i == 1 ? hr * 0.08 : 0)), hr * 0.07, coal);
     }
-    // Top hat with a red band.
     final brim = Rect.fromCenter(center: sm.head + Offset(0, -hr * 0.78), width: hr * 2.3, height: hr * 0.2);
     c.drawRRect(RRect.fromRectAndRadius(brim, Radius.circular(hr * 0.06)), coal);
     final crown = Rect.fromLTWH(sm.head.dx - hr * 0.75, brim.top - hr * 1.15, hr * 1.5, hr * 1.2);
@@ -683,11 +928,212 @@ class ScenePainter extends CustomPainter {
     c.drawOval(drift, Paint()..color = SceneColors.snowBright);
   }
 
+  void _paintSignpost(Canvas c, Signpost sign) {
+    final top = sign.top;
+    final base = sign.base;
+    final poleW = u * 0.012;
+    final pole = Rect.fromLTRB(base.dx - poleW / 2, top.dy, base.dx + poleW / 2, base.dy);
+    c.drawRect(pole, Paint()..color = Colors.white);
+    final stripe = Paint()..color = ElfColors.red;
+    for (var y = top.dy + u * 0.01; y < base.dy; y += u * 0.024) {
+      c.drawRect(Rect.fromLTWH(pole.left, y, poleW, u * 0.012), stripe);
+    }
+    c.drawCircle(top, poleW * 0.9, stripe);
+
+    final boardH = u * 0.03;
+    final boardW = u * 0.08;
+    final boardTop = top.dy + u * 0.028;
+    final board = Path()
+      ..moveTo(base.dx + poleW * 0.4, boardTop)
+      ..lineTo(base.dx + poleW * 0.4 - boardW + boardH * 0.6, boardTop)
+      ..lineTo(base.dx + poleW * 0.4 - boardW, boardTop + boardH / 2)
+      ..lineTo(base.dx + poleW * 0.4 - boardW + boardH * 0.6, boardTop + boardH)
+      ..lineTo(base.dx + poleW * 0.4, boardTop + boardH)
+      ..close();
+    c.drawPath(board, Paint()..color = SceneColors.cream);
+    c.drawPath(
+      board,
+      Paint()
+        ..color = SceneColors.woodDark
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1, u * 0.003),
+    );
+    final text = Paint()
+      ..color = SceneColors.woodDark
+      ..strokeWidth = math.max(1, u * 0.004)
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 3; i++) {
+      final y = boardTop + boardH * (0.3 + 0.2 * i);
+      final x0 = base.dx + poleW * 0.4 - boardW * (0.72 - 0.06 * i);
+      c.drawLine(Offset(x0, y), Offset(x0 + boardW * (0.5 - 0.08 * i), y), text);
+    }
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(base.dx + poleW * 0.4 - boardW * 0.9, boardTop - u * 0.005, boardW * 0.85, u * 0.008),
+        Radius.circular(u * 0.003),
+      ),
+      Paint()..color = SceneColors.snowBright,
+    );
+  }
+
+  void _paintVillager(Canvas c, Villager v) {
+    final hgt = v.height;
+    final x = v.feet.dx;
+    final y0 = v.feet.dy;
+    final dir = v.facingRight ? 1.0 : -1.0;
+
+    c.drawOval(
+      Rect.fromCenter(center: Offset(x, y0), width: hgt * 0.5, height: hgt * 0.1),
+      Paint()..color = SceneColors.shadow,
+    );
+    final legs = Paint()..color = const Color(0xFF2B3A5C);
+    for (final side in const [-1.0, 1.0]) {
+      c.drawRect(Rect.fromLTWH(x + side * hgt * 0.09 - hgt * 0.055, y0 - hgt * 0.30, hgt * 0.11, hgt * 0.30), legs);
+      c.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x + side * hgt * 0.09 - hgt * 0.07, y0 - hgt * 0.07, hgt * 0.14, hgt * 0.07),
+          Radius.circular(hgt * 0.03),
+        ),
+        Paint()..color = SceneColors.woodDark,
+      );
+    }
+    final jacket = Paint()..color = v.jacket;
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(x - hgt * 0.21, y0 - hgt * 0.68, hgt * 0.42, hgt * 0.42),
+        Radius.circular(hgt * 0.08),
+      ),
+      jacket,
+    );
+    c.drawLine(
+      Offset(x, y0 - hgt * 0.64),
+      Offset(x, y0 - hgt * 0.30),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.35)
+        ..strokeWidth = math.max(1, hgt * 0.025),
+    );
+    final arm = Paint()
+      ..color = v.jacket
+      ..strokeWidth = hgt * 0.09
+      ..strokeCap = StrokeCap.round;
+    c.drawLine(Offset(x - hgt * 0.18, y0 - hgt * 0.60), Offset(x - hgt * 0.27, y0 - hgt * 0.38), arm);
+    c.drawLine(Offset(x + hgt * 0.18, y0 - hgt * 0.60), Offset(x + hgt * 0.27, y0 - hgt * 0.38), arm);
+    final mitten = Paint()..color = v.hat;
+    c.drawCircle(Offset(x - hgt * 0.27, y0 - hgt * 0.37), hgt * 0.055, mitten);
+    c.drawCircle(Offset(x + hgt * 0.27, y0 - hgt * 0.37), hgt * 0.055, mitten);
+    c.drawRect(
+      Rect.fromLTWH(x - hgt * 0.23, y0 - hgt * 0.70, hgt * 0.46, hgt * 0.07),
+      Paint()..color = SceneColors.goldLight,
+    );
+
+    final headC = Offset(x, y0 - hgt * 0.84);
+    final hr = hgt * 0.16;
+    c.drawCircle(headC, hr, Paint()..color = ElfColors.skin);
+    final eye = Paint()..color = ElfColors.eye;
+    c.drawCircle(headC + Offset(dir * hr * 0.15, -hr * 0.05), hr * 0.12, eye);
+    c.drawCircle(headC + Offset(dir * hr * 0.55, -hr * 0.05), hr * 0.12, eye);
+    c.drawCircle(headC + Offset(dir * hr * 0.3, hr * 0.35), hr * 0.2, Paint()..color = ElfColors.cheek);
+
+    final hat = Paint()..color = v.hat;
+    c.drawArc(
+      Rect.fromCircle(center: headC + Offset(0, -hr * 0.05), radius: hr * 1.08),
+      math.pi,
+      math.pi,
+      true,
+      hat,
+    );
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(headC.dx - hr * 1.1, headC.dy - hr * 0.3, hr * 2.2, hr * 0.32),
+        Radius.circular(hr * 0.1),
+      ),
+      Paint()..color = Color.lerp(v.hat, Colors.black, 0.25)!,
+    );
+    c.drawCircle(headC + Offset(0, -hr * 1.15), hr * 0.28, Paint()..color = Colors.white);
+  }
+
+  void _paintReindeer(Canvas c, Reindeer r) {
+    final hgt = r.height;
+    final dir = r.facingRight ? 1.0 : -1.0;
+    final fx = r.feet.dx;
+    final fy = r.feet.dy;
+    final body = Paint()..color = SceneColors.reindeer;
+    final dark = Paint()..color = SceneColors.reindeerDark;
+
+    c.drawOval(
+      Rect.fromCenter(center: Offset(fx, fy), width: hgt * 1.0, height: hgt * 0.12),
+      Paint()..color = SceneColors.shadow,
+    );
+    final leg = Paint()
+      ..color = SceneColors.reindeer
+      ..strokeWidth = hgt * 0.07
+      ..strokeCap = StrokeCap.round;
+    for (final off in const [-0.30, -0.16, 0.16, 0.30]) {
+      c.drawLine(Offset(fx + off * hgt, fy - hgt * 0.45), Offset(fx + off * hgt * 1.1, fy - hgt * 0.02), leg);
+      c.drawCircle(Offset(fx + off * hgt * 1.1, fy - hgt * 0.02), hgt * 0.04, dark);
+    }
+    c.drawOval(Rect.fromCenter(center: Offset(fx, fy - hgt * 0.52), width: hgt * 0.9, height: hgt * 0.38), body);
+    c.drawOval(
+      Rect.fromCenter(center: Offset(fx, fy - hgt * 0.45), width: hgt * 0.6, height: hgt * 0.16),
+      Paint()..color = SceneColors.cream.withValues(alpha: 0.8),
+    );
+    c.drawCircle(Offset(fx - dir * hgt * 0.46, fy - hgt * 0.58), hgt * 0.06, dark);
+    c.drawLine(
+      Offset(fx + dir * hgt * 0.35, fy - hgt * 0.62),
+      Offset(fx + dir * hgt * 0.55, fy - hgt * 0.92),
+      Paint()
+        ..color = SceneColors.reindeer
+        ..strokeWidth = hgt * 0.17
+        ..strokeCap = StrokeCap.round,
+    );
+    final headC = Offset(fx + dir * hgt * 0.62, fy - hgt * 0.97);
+    c.drawOval(Rect.fromCenter(center: headC, width: hgt * 0.32, height: hgt * 0.2), body);
+    c.drawPath(
+      Path()
+        ..moveTo(headC.dx - dir * hgt * 0.06, headC.dy - hgt * 0.08)
+        ..lineTo(headC.dx - dir * hgt * 0.16, headC.dy - hgt * 0.2)
+        ..lineTo(headC.dx - dir * hgt * 0.00, headC.dy - hgt * 0.12)
+        ..close(),
+      body,
+    );
+    c.drawCircle(headC + Offset(dir * hgt * 0.06, -hgt * 0.03), hgt * 0.022, Paint()..color = ElfColors.eye);
+    final nose = Offset(headC.dx + dir * hgt * 0.16, headC.dy);
+    if (events.sleigh) {
+      c.drawCircle(nose, hgt * 0.09, Paint()..color = ElfColors.red.withValues(alpha: 0.35));
+      c.drawCircle(nose, hgt * 0.045, Paint()..color = ElfColors.red);
+    } else {
+      c.drawCircle(nose, hgt * 0.035, dark);
+    }
+    final antler = Paint()
+      ..color = SceneColors.reindeerDark
+      ..strokeWidth = math.max(1, hgt * 0.035)
+      ..strokeCap = StrokeCap.round;
+    for (final side in const [-0.08, 0.02]) {
+      final root = Offset(headC.dx - dir * hgt * side, headC.dy - hgt * 0.08);
+      final tip = root + Offset(-dir * hgt * 0.06, -hgt * 0.26);
+      c.drawLine(root, tip, antler);
+      c.drawLine(Offset.lerp(root, tip, 0.5)!, Offset.lerp(root, tip, 0.5)! + Offset(-dir * hgt * 0.09, -hgt * 0.06), antler);
+      c.drawLine(tip, tip + Offset(dir * hgt * 0.07, -hgt * 0.06), antler);
+    }
+    c.drawArc(
+      Rect.fromCenter(center: Offset(fx + dir * hgt * 0.42, fy - hgt * 0.74), width: hgt * 0.2, height: hgt * 0.16),
+      0,
+      math.pi * 2,
+      false,
+      Paint()
+        ..color = ElfColors.red
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = hgt * 0.04,
+    );
+    c.drawCircle(Offset(fx + dir * hgt * 0.42, fy - hgt * 0.65), hgt * 0.03, Paint()..color = SceneColors.gold);
+  }
+
   @override
   bool shouldRepaint(ScenePainter old) =>
       old.layout != layout ||
       old.decorations != decorations ||
+      old.events != events ||
       old.elfSpot != elfSpot ||
-      old.elfPose != elfPose ||
+      old.elfReacting != elfReacting ||
       old.elfT != elfT;
 }

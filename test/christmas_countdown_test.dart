@@ -63,15 +63,10 @@ void main() {
     expect(ChristmasCountdown.decorationDay(DateTime(2026, 12, 31)), 24);
   });
 
-  test('hiding spot follows the date in December and rotates otherwise', () {
-    expect(ChristmasCountdown.hidingSpot(DateTime(2026, 12, 1)), 0);
-    expect(ChristmasCountdown.hidingSpot(DateTime(2026, 12, 24)), 23);
-    expect(ChristmasCountdown.hidingSpot(DateTime(2026, 1, 1)), 1);
-    expect(ChristmasCountdown.hidingSpot(DateTime(2026, 12, 25)), 359 % 24);
-    final spots = {
-      for (var d = 1; d <= 30; d++) ChristmasCountdown.hidingSpot(DateTime(2026, 9, d)),
-    };
-    expect(spots.length, 24);
+  test('day of year', () {
+    expect(ChristmasCountdown.dayOfYear(DateTime(2026, 1, 1)), 1);
+    expect(ChristmasCountdown.dayOfYear(DateTime(2026, 12, 31)), 365);
+    expect(ChristmasCountdown.dayOfYear(DateTime(2028, 12, 31)), 366);
   });
 
   test('date keys are zero padded', () {

@@ -12,14 +12,21 @@ music is synthesised from public domain carols, and nothing leaves the phone.
 - **Countdown.** A big number of sleeps until Christmas, plus days, hours,
   minutes and seconds. Christmas Eve or Christmas Day is picked from the
   phone's country and can be changed in Settings.
-- **The village.** A drawn night scene with mountains, houses with warm windows,
-  a lamp post, a snowman and a big tree. In December the tree gains lights,
-  baubles, garlands, candy canes and presents day by day, and the star lands on
-  the top on the 24th.
-- **Find Pip.** The elf hides somewhere new every day, all year round. Tap
-  around and the app tells you if you are getting warmer. Finding him brings a
-  jingle, a jumping elf and a line from Pip. December finds are kept on an advent
-  style calendar, and a hint button appears if he stays hidden too long.
+- **The village.** A drawn night scene with mountains, a church, houses with
+  warm windows, a lamp post, a bench, a snowman, a woodpile, a postbox, two
+  village children in beanies, birds and a big tree. In December the tree gains
+  lights, baubles, garlands, candy canes and presents day by day, and the star
+  lands on the top on the 24th. Some nights bring northern lights, some days a
+  reindeer wanders in, shooting stars cross the sky, and on the 24th Santa's
+  sleigh passes the moon.
+- **Find Pip.** The elf hides in one of 36 spots, somewhere new every day, all
+  year round. Each year shuffles the order, easy and hard days are spread out,
+  and 1 December is always easy. Tap around and the app tells you if you are
+  getting warmer. Finding him brings a jingle, a reaction that fits the spot
+  (he pops out of chimneys, wobbles on roofs, peeks out from behind things), a
+  line from Pip and a note about what changed in the village today. December
+  finds are kept on an advent style calendar, and a hint button appears if he
+  stays hidden too long.
 - **Snow.** Three depths of flakes with sway and wind. Drag a finger across the
   screen to blow the snow sideways. Intensity is adjustable and grows through
   December.
@@ -54,7 +61,12 @@ RENDER_OUT=C:\some\folder flutter test test/tools/render_test.dart
 ```
 
 With `RENDER_ICONS=1` added it also regenerates `assets/icon/` from the same
-elf drawing. After that:
+elf drawing. To see where Pip hides on a day, or all of December:
+
+```
+PRINT_SCHEDULE=2026-12-20 flutter test test/tools/schedule_test.dart
+PRINT_SCHEDULE=2026 flutter test test/tools/schedule_test.dart
+``` After that:
 
 ```
 dart run flutter_launcher_icons

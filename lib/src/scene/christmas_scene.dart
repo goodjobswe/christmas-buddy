@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import 'package:christmas_buddy/src/elf/elf_painter.dart';
 import 'package:christmas_buddy/src/scene/elf_spots.dart';
+import 'package:christmas_buddy/src/scene/scene_events.dart';
 import 'package:christmas_buddy/src/scene/scene_fx_painter.dart';
 import 'package:christmas_buddy/src/scene/scene_layout.dart';
 import 'package:christmas_buddy/src/scene/scene_painter.dart';
@@ -19,6 +19,7 @@ class ChristmasScene extends StatefulWidget {
     required this.elfSpotIndex,
     required this.showElf,
     required this.flakeCount,
+    this.events = const SceneEvents(aurora: false, reindeerStation: null, sleigh: false),
     this.animate = true,
     this.onElfTap,
     this.onMissTap,
@@ -29,6 +30,7 @@ class ChristmasScene extends StatefulWidget {
   final int elfSpotIndex;
   final bool showElf;
   final int flakeCount;
+  final SceneEvents events;
   final bool animate;
   final void Function(ElfSpot spot)? onElfTap;
   final void Function(Offset position, double distanceToElf)? onMissTap;
@@ -57,7 +59,7 @@ class ChristmasSceneState extends State<ChristmasScene> with TickerProviderState
     super.initState();
     _ticker = createTicker(_tick);
     if (widget.animate) _ticker.start();
-    _elfAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+    _elfAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
   }
 
   @override
@@ -77,8 +79,9 @@ class ChristmasSceneState extends State<ChristmasScene> with TickerProviderState
     _time.value = t;
   }
 
-  /// Makes the hidden elf wave for a moment.
-  void waveElf() {
+  /// Plays the hidden elf's reaction for his spot: a wave, a pop up, a peek
+  /// out, a wobble or a jump.
+  void react() {
     _elfAnim.forward(from: 0);
   }
 
@@ -140,8 +143,9 @@ class ChristmasSceneState extends State<ChristmasScene> with TickerProviderState
                     painter: ScenePainter(
                       layout: layout,
                       decorations: decorations,
+                      events: widget.events,
                       elfSpot: spot,
-                      elfPose: _elfAnim.isAnimating ? ElfPose.wave : ElfPose.idle,
+                      elfReacting: _elfAnim.isAnimating,
                       elfT: _elfAnim.value,
                     ),
                   ),
@@ -154,6 +158,7 @@ class ChristmasSceneState extends State<ChristmasScene> with TickerProviderState
                     painter: SceneFxPainter(
                       layout: layout,
                       decorations: decorations,
+                      events: widget.events,
                       time: _time,
                       puffs: _puffs,
                       hintStart: _hintStart,

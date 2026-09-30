@@ -10,9 +10,11 @@ import 'package:christmas_buddy/src/countdown/christmas_countdown.dart';
 import 'package:christmas_buddy/src/countdown/countdown_panel.dart';
 import 'package:christmas_buddy/src/elf/elf_lines.dart';
 import 'package:christmas_buddy/src/elf/elf_painter.dart';
+import 'package:christmas_buddy/src/elf/elf_schedule.dart';
 import 'package:christmas_buddy/src/elf/found_dialog.dart';
 import 'package:christmas_buddy/src/scene/christmas_scene.dart';
 import 'package:christmas_buddy/src/scene/elf_spots.dart';
+import 'package:christmas_buddy/src/scene/scene_events.dart';
 import 'package:christmas_buddy/src/settings/app_settings.dart';
 import 'package:christmas_buddy/src/share/share_scene.dart';
 import 'package:christmas_buddy/src/snow/snowflakes.dart';
@@ -123,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final audio = _audio;
     final now = appNow();
     final key = ChristmasCountdown.dateKey(now);
-    _sceneKey.currentState?.waveElf();
+    _sceneKey.currentState?.react();
     if (settings.isFoundOn(key)) {
       audio.play(Sfx.wave);
       _showToast(ElfLines.pickAgain(_random));
@@ -136,7 +138,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final detail = now.month == 12
         ? 'Found on ${_dayLabel(now)}. ${settings.foundInDecember(now.year)} of 24 this December.'
         : 'Found on ${_dayLabel(now)}. ${settings.foundDates.length} found in total.';
-    await showFoundDialog(context, line: ElfLines.pickFound(_random), detail: detail);
+    await showFoundDialog(
+      context,
+      line: ElfLines.foundLineFor(spot.reaction, _random),
+      detail: detail,
+      notice: SceneEvents.notice(now),
+    );
   }
 
   void _onMissTap(Offset position, double distance) {
@@ -202,7 +209,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ChristmasScene(
                   key: _sceneKey,
                   day: day,
-                  elfSpotIndex: ChristmasCountdown.hidingSpot(now),
+                  elfSpotIndex: ElfSchedule.spotFor(now),
+                  events: SceneEvents.forDate(now),
                   showElf: true,
                   flakeCount: flakes,
                   onElfTap: _onElfTap,

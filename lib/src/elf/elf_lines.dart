@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:christmas_buddy/src/scene/elf_spots.dart';
+
 /// What Pip the elf says on the home screen. All lines are original.
 /// `{sleeps}` is replaced with the number of sleeps left.
 class ElfLines {
@@ -42,6 +44,26 @@ class ElfLines {
     'A good elf never reveals a hiding spot. A great elf giggles a bit.',
     'The village bakery is open. I can smell it from up here.',
     'Merry almost Christmas from me and my slightly bent hat.',
+    'The kids in the village keep waving at me. It is very hard to stay hidden.',
+    'Those two in the beanies are not me. Nice try though.',
+    'The church bell rings at six. I know because it rang right in my ear.',
+    'Someone left a letter in the postbox for Santa. I did not read it. Much.',
+    'The woodpile is warmer than it looks. Ask me how I know.',
+    'That signpost says North Pole is that way. It is wrong, but it is trying.',
+    'I saw a shooting star. I wished for a bigger hat.',
+    'When the sky goes green and purple, that is the elves painting up north.',
+    'The reindeer came down to the village to look at the tree. Do not tell Santa.',
+    'A bird sat on my hat for ten minutes. I did not move. Champion hider.',
+    'The bench by the lamp is the best seat in the village. Also the coldest.',
+    'If you hear giggling, it is not the snow.',
+    'The house with the blue walls makes the best cocoa. I have compared.',
+    'I dusted every roof with snow this morning. You are welcome.',
+    'Careful near the fence. The red bird bites. Well, pecks. Firmly.',
+    'The mountains look small from here. They are not small. I checked.',
+    'I hid in the tree once and came out smelling of pine for a week.',
+    'Every present under the tree has been shaken. For science.',
+    'There is a spot in the village that nobody has ever found me in. Not saying where.',
+    'I keep a snowball in my pocket in case of emergencies. It has never been an emergency.',
   ];
 
   static const List<String> christmasLines = [
@@ -49,6 +71,7 @@ class ElfLines {
     'Merry Christmas! The star is up and so am I, far too early.',
     'Santa made it. I helped. Mostly with the cookies.',
     'Merry Christmas! Give someone a hug from Pip.',
+    'Did you see the sleigh cross the moon? I waved. I am sure he saw.',
   ];
 
   /// Lines Pip says when found, picked at random.
@@ -59,6 +82,31 @@ class ElfLines {
     'Hooray! That deserves a jingle.',
     'You got me! I was admiring the view.',
     'Well spotted! The snowman gave me away, did he not?',
+  ];
+
+  static const List<String> _popUpLines = [
+    'Peekaboo! Was it the hat sticking out?',
+    'Cosy in here, and you still spotted me.',
+    'I was tucked in so well. You are good at this.',
+    'A bit sooty, but very happy to see you!',
+  ];
+
+  static const List<String> _peekOutLines = [
+    'Boo! I was right behind that the whole time.',
+    'A fine hiding place, spoiled by a fine finder.',
+    'You saw my boots, did you not? It is always the boots.',
+  ];
+
+  static const List<String> _tumbleLines = [
+    'Whoa, steady! You made me wobble.',
+    'Careful, it is slippery up here!',
+    'I nearly slid off. Worth it for the view.',
+  ];
+
+  static const List<String> _jumpLines = [
+    'Yes! Found me! Time for a victory jump.',
+    'The view is great up here. Even better with company.',
+    'You found me, so I get to jump. Elf rules.',
   ];
 
   /// Shown when the elf is tapped again after being found today.
@@ -85,6 +133,18 @@ class ElfLines {
 
   static String pickFound(Random random) =>
       foundLines[random.nextInt(foundLines.length)];
+
+  /// A found line that fits how Pip reacts in his spot.
+  static String foundLineFor(ElfReaction reaction, Random random) {
+    final list = switch (reaction) {
+      ElfReaction.wave => foundLines,
+      ElfReaction.popUp => _popUpLines,
+      ElfReaction.peekOut => _peekOutLines,
+      ElfReaction.tumble => _tumbleLines,
+      ElfReaction.jump => _jumpLines,
+    };
+    return list[random.nextInt(list.length)];
+  }
 
   static String pickAgain(Random random) =>
       againLines[random.nextInt(againLines.length)];

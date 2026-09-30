@@ -21,6 +21,8 @@ import 'package:christmas_buddy/main.dart';
 import 'package:christmas_buddy/src/audio/audio_controller.dart';
 import 'package:christmas_buddy/src/elf/elf_painter.dart';
 import 'package:christmas_buddy/src/scene/christmas_scene.dart';
+import 'package:christmas_buddy/src/scene/elf_spots.dart';
+import 'package:christmas_buddy/src/scene/scene_events.dart';
 import 'package:christmas_buddy/src/services/santa_list_store.dart';
 import 'package:christmas_buddy/src/settings/app_settings.dart';
 import 'package:christmas_buddy/src/theme.dart';
@@ -53,15 +55,19 @@ void main() {
     Directory(out).createSync(recursive: true);
     await _loadFonts();
 
+    const quiet = SceneEvents(aurora: false, reindeerStation: null, sleigh: false);
+    const lively = SceneEvents(aurora: true, reindeerStation: 0, sleigh: false);
+    const christmas = SceneEvents(aurora: true, reindeerStation: 1, sleigh: true);
     final cases = [
-      ('scene_phone_day0', const Size(411, 890), 0, 12),
-      ('scene_phone_day5', const Size(411, 890), 5, 4),
-      ('scene_phone_day12', const Size(411, 890), 12, 11),
-      ('scene_phone_day24', const Size(411, 890), 24, 23),
-      ('scene_small_day18', const Size(360, 640), 18, 17),
-      ('scene_tablet_day20', const Size(800, 1280), 20, 19),
+      ('scene_phone_day0', const Size(411, 890), 0, 12, quiet),
+      ('scene_phone_day0_events', const Size(411, 890), 0, 29, lively),
+      ('scene_phone_day5', const Size(411, 890), 5, 4, quiet),
+      ('scene_phone_day12', const Size(411, 890), 12, 11, lively),
+      ('scene_phone_day24', const Size(411, 890), 24, 23, christmas),
+      ('scene_small_day18', const Size(360, 640), 18, 17, quiet),
+      ('scene_tablet_day20', const Size(800, 1280), 20, 19, lively),
     ];
-    for (final (name, size, day, spot) in cases) {
+    for (final (name, size, day, spot, events) in cases) {
       final key = GlobalKey();
       await tester.binding.setSurfaceSize(size);
       tester.view.physicalSize = size;
@@ -71,7 +77,7 @@ void main() {
           textDirection: TextDirection.ltr,
           child: RepaintBoundary(
             key: key,
-            child: ChristmasScene(day: day, elfSpotIndex: spot, showElf: true, flakeCount: 0, animate: false),
+            child: ChristmasScene(day: day, elfSpotIndex: spot, showElf: true, flakeCount: 0, events: events, animate: false),
           ),
         ),
       );
@@ -80,7 +86,7 @@ void main() {
     }
 
     // Every hiding spot on one sheet, so they can be checked at a glance.
-    for (var i = 0; i < 24; i++) {
+    for (var i = 0; i < ElfSpots.count; i++) {
       final key = GlobalKey();
       const size = Size(411, 890);
       await tester.binding.setSurfaceSize(size);
@@ -90,7 +96,7 @@ void main() {
           textDirection: TextDirection.ltr,
           child: RepaintBoundary(
             key: key,
-            child: ChristmasScene(day: i + 1, elfSpotIndex: i, showElf: true, flakeCount: 0, animate: false),
+            child: ChristmasScene(day: (i % 24) + 1, elfSpotIndex: i, showElf: true, flakeCount: 0, animate: false),
           ),
         ),
       );

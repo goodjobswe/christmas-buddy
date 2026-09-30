@@ -48,6 +48,6 @@ void main() {
 
   test('index wraps around', () {
     final layout = SceneLayout(const Size(411, 890));
-    expect(ElfSpots.resolve(24, layout).feet, ElfSpots.resolve(0, layout).feet);
+    expect(ElfSpots.resolve(ElfSpots.count, layout).feet, ElfSpots.resolve(0, layout).feet);
   });
 }

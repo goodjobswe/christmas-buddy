@@ -47,13 +47,6 @@ class ChristmasCountdown {
     return now.day > 24 ? 24 : now.day;
   }
 
-  /// Which of the 24 hiding spots the elf uses today. In December it follows
-  /// the date to keep the advent feel; the rest of the year it rotates.
-  static int hidingSpot(DateTime now) {
-    if (now.month == 12 && now.day <= 24) return now.day - 1;
-    return dayOfYear(now) % 24;
-  }
-
   static int dayOfYear(DateTime now) {
     final start = DateTime.utc(now.year, 1, 1);
     final today = DateTime.utc(now.year, now.month, now.day);
