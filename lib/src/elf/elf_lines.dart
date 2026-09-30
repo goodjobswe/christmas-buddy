@@ -1,0 +1,91 @@
+import 'dart:math';
+
+/// What Pip the elf says on the home screen. All lines are original.
+/// `{sleeps}` is replaced with the number of sleeps left.
+class ElfLines {
+  static const name = 'Pip';
+
+  static const List<String> _lines = [
+    'Only {sleeps} sleeps to go. I have already packed my mittens.',
+    'I am hiding somewhere new today. Warmer, warmer, colder, no, warmer!',
+    'Snow tastes best straight from the sky. Do not tell the reindeer.',
+    'I counted the stars last night and lost track at forty-two.',
+    'The tree gets one more bauble every day. I am in charge of the wonky ones.',
+    'Cocoa first, then presents. Those are the rules of the North Pole.',
+    'If you see a mitten on the roof, it is mine. I was practising jumps.',
+    'The snowman winked at me. I am fairly sure he winked at me.',
+    'My hat has a bell so Santa can find me. It has never once worked.',
+    'Every window in the village is glowing. That is my favourite time of day.',
+    'I wrapped a present so well that I forgot what was inside.',
+    'Careful where you step. Some of these snowflakes are my friends.',
+    'I tried to sing to the reindeer. They asked for a different elf.',
+    '{sleeps} sleeps left and my list still says "find the good scissors".',
+    'The lamp post is warm if you hug it. Not that I have tried.',
+    'I wrote your name on the nice list in my best handwriting.',
+    'Sleighs are just sledges that went to a good school.',
+    'Somewhere out there a gingerbread man is thinking about you.',
+    'I hid so well yesterday that even I could not find me.',
+    'The moon is up early tonight. It wants to see the tree too.',
+    'You found the app. Now find the elf. I believe in you.',
+    'The chimney smoke is doing loops today. That means good news.',
+    'If it snows on your nose, make a wish. I made three.',
+    'I polished the star myself. Well, I polished most of it.',
+    'Reindeer cannot whistle. I have tested this extensively.',
+    'Do not worry about the naughty list. It is mostly blank this year.',
+    '{sleeps} more sleeps. That is {sleeps} more bedtime stories.',
+    'The snow got deeper overnight. My boots are very pleased.',
+    'Santa says patience is a gift. I say so is a bicycle.',
+    'I keep a spare candy cane behind my ear for emergencies.',
+    'When the last bauble is up, keep an eye on the top of the tree.',
+    'I once raced a snowflake to the ground. It cheated.',
+    'Pssst. Tap around. I might be closer than you think.',
+    'A good elf never reveals a hiding spot. A great elf giggles a bit.',
+    'The village bakery is open. I can smell it from up here.',
+    'Merry almost Christmas from me and my slightly bent hat.',
+  ];
+
+  static const List<String> christmasLines = [
+    'It is Christmas! I am coming out of hiding for cocoa.',
+    'Merry Christmas! The star is up and so am I, far too early.',
+    'Santa made it. I helped. Mostly with the cookies.',
+    'Merry Christmas! Give someone a hug from Pip.',
+  ];
+
+  /// Lines Pip says when found, picked at random.
+  static const List<String> foundLines = [
+    'You found me! I was so quiet, too.',
+    'Aha, sharp eyes! Same time tomorrow?',
+    'Found already? I need better hiding spots.',
+    'Hooray! That deserves a jingle.',
+    'You got me! I was admiring the view.',
+    'Well spotted! The snowman gave me away, did he not?',
+  ];
+
+  /// Shown when the elf is tapped again after being found today.
+  static const List<String> againLines = [
+    'Still here! Come back tomorrow for a new spot.',
+    'Yes, yes, it is me. Hello again!',
+    'You already found me today. Showing off, are we?',
+  ];
+
+  static const warmer = 'Warmer...';
+  static const colder = 'Colder...';
+  static const hot = 'Very warm!';
+  static const cold = 'Freezing cold.';
+
+  static String pick(
+    Random random, {
+    required int sleeps,
+    required bool isChristmas,
+  }) {
+    final list = isChristmas ? christmasLines : _lines;
+    final line = list[random.nextInt(list.length)];
+    return line.replaceAll('{sleeps}', '$sleeps');
+  }
+
+  static String pickFound(Random random) =>
+      foundLines[random.nextInt(foundLines.length)];
+
+  static String pickAgain(Random random) =>
+      againLines[random.nextInt(againLines.length)];
+}
